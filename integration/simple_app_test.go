@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -55,7 +56,8 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 			source, err = occam.Source(filepath.Join("testdata", "simple_app"))
 			Expect(err).NotTo(HaveOccurred())
 
-			image, _, err = pack.Build.
+			var logs fmt.Stringer
+			image, logs, err = pack.WithNoColor().Build.
 				WithBuildpacks(
 					nodeBuildpack,
 					tiniBuildpack,
@@ -64,7 +66,7 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 				).
 				WithNoPull().
 				Execute(name, source)
-			Expect(err).NotTo(HaveOccurred())
+			Expect(err).NotTo(HaveOccurred(), logs.String())
 
 			container, err = docker.Container.Run.Execute(image.ID)
 			Expect(err).NotTo(HaveOccurred())
@@ -73,8 +75,19 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 
 			response, err := http.Get(fmt.Sprintf("http://localhost:%s", container.HostPort()))
 			Expect(err).NotTo(HaveOccurred())
+			defer response.Body.Close()
+
 			Expect(response.StatusCode).To(Equal(http.StatusOK))
-			Expect(response.Body).To(Equal("hello world"))
+
+			content, err := ioutil.ReadAll(response.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).To(ContainSubstring("hello world"))
+
+			Expect(logs).To(ContainLines(
+				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, buildpackInfo.Buildpack.Name)),
+				"  Writing start command",
+				`    tini -g -- npm start`,
+			))
 		})
 	})
 }

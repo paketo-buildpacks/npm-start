@@ -1,12 +1,14 @@
 package npmstart_test
 
 import (
+	"bytes"
 	"io/ioutil"
 	"os"
 	"testing"
 
 	npmstart "github.com/paketo-buildpacks/npm-start"
 	"github.com/paketo-buildpacks/packit"
+	"github.com/paketo-buildpacks/packit/scribe"
 	"github.com/sclevine/spec"
 
 	. "github.com/onsi/gomega"
@@ -19,6 +21,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		layersDir  string
 		workingDir string
 		cnbDir     string
+		buffer     *bytes.Buffer
 
 		build packit.BuildFunc
 	)
@@ -34,7 +37,10 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		workingDir, err = ioutil.TempDir("", "working-dir")
 		Expect(err).NotTo(HaveOccurred())
 
-		build = npmstart.Build()
+		buffer = bytes.NewBuffer(nil)
+		logger := scribe.NewLogger(buffer)
+
+		build = npmstart.Build(logger)
 	})
 
 	it.After(func() {
@@ -61,10 +67,17 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 		Expect(result).To(Equal(packit.BuildResult{
 			Plan: packit.BuildpackPlan{
-				Entries: nil,
+				Entries: []packit.BuildpackPlanEntry{},
 			},
-			Layers: nil,
+			Processes: []packit.Process{
+				{
+					Type:    "web",
+					Command: "tini -g -- npm start",
+				},
+			},
 		}))
 
+		Expect(buffer.String()).To(ContainSubstring("Some Buildpack some-version"))
+		Expect(buffer.String()).To(ContainSubstring("Writing start command"))
 	})
 }
