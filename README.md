@@ -3,7 +3,7 @@
 ## `gcr.io/paketo-buildpacks/npm-start`
 
 The NPM Start CNB sets the start command for the given application. The start
-command uses [Tini](https://github.com/krallin/tini) as the init process to run
+command uses [tini](https://github.com/krallin/tini) as the init process to run
 `npm start`
 
 ## Integration
