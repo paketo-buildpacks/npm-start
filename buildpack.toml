@@ -2,7 +2,7 @@ api = "0.2"
 
 [buildpack]
   id = "paketo-buildpacks/npm-start"
-  name = "Paketo Npm Start Buildpack"
+  name = "Paketo NPM Start Buildpack"
   homepage = "https://github.com/paketo-buildpacks/npm-start"
 
 [[stacks]]
