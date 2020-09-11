@@ -62,10 +62,9 @@ func testGracefulShutdown(t *testing.T, context spec.G, it spec.S) {
 			var logs fmt.Stringer
 			image, logs, err = pack.WithNoColor().Build.
 				WithBuildpacks(
-					nodeBuildpack,
-					tiniBuildpack,
-					npmBuildpack,
-					buildpack,
+					settings.Buildpacks.NodeEngine.Online,
+					settings.Buildpacks.NPMInstall.Online,
+					settings.Buildpacks.NPMStart.Online,
 				).
 				WithNoPull().
 				Execute(name, source)
@@ -94,7 +93,6 @@ func testGracefulShutdown(t *testing.T, context spec.G, it spec.S) {
 				return containerLogs
 			}
 
-			// this works due to tini
 			Eventually(cLogs).Should(ContainSubstring("echo from SIGTERM handler"))
 		})
 	})

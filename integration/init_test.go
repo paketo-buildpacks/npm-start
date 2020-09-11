@@ -15,41 +15,41 @@ import (
 	. "github.com/onsi/gomega"
 )
 
-var (
-	buildpack     string
-	nodeBuildpack string
-	tiniBuildpack string
-	npmBuildpack  string
-	buildpackInfo struct {
-		Buildpack struct {
-			ID   string
-			Name string
+var settings struct {
+	Buildpacks struct {
+		NodeEngine struct {
+			Online string
+		}
+		NPMInstall struct {
+			Online string
+		}
+		NPMStart struct {
+			Online string
 		}
 	}
-)
+	Buildpack struct {
+		ID   string
+		Name string
+	}
+	Config struct {
+		NodeEngine string `json:"node-engine"`
+		NPMInstall string `json:"npm-install"`
+	}
+}
 
 func TestIntegration(t *testing.T) {
-	var (
-		Expect = NewWithT(t).Expect
-		err    error
-	)
-
-	var config struct {
-		NodeEngine string `json:"node-engine"`
-		Npm        string `json:"npm"`
-		Tini       string `json:"tini"`
-	}
+	Expect := NewWithT(t).Expect
 
 	file, err := os.Open("../integration.json")
 	Expect(err).NotTo(HaveOccurred())
 	defer file.Close()
 
-	Expect(json.NewDecoder(file).Decode(&config)).To(Succeed())
+	Expect(json.NewDecoder(file).Decode(&settings.Config)).To(Succeed())
 
 	file, err = os.Open("../buildpack.toml")
 	Expect(err).NotTo(HaveOccurred())
 
-	_, err = toml.DecodeReader(file, &buildpackInfo)
+	_, err = toml.DecodeReader(file, &settings.Buildpack)
 	Expect(err).NotTo(HaveOccurred())
 
 	root, err := filepath.Abs("./..")
@@ -57,21 +57,17 @@ func TestIntegration(t *testing.T) {
 
 	buildpackStore := occam.NewBuildpackStore()
 
-	buildpack, err = buildpackStore.Get.
+	settings.Buildpacks.NPMStart.Online, err = buildpackStore.Get.
 		WithVersion("1.2.3").
 		Execute(root)
 	Expect(err).ToNot(HaveOccurred())
 
-	nodeBuildpack, err = buildpackStore.Get.
-		Execute(config.NodeEngine)
+	settings.Buildpacks.NodeEngine.Online, err = buildpackStore.Get.
+		Execute(settings.Config.NodeEngine)
 	Expect(err).ToNot(HaveOccurred())
 
-	npmBuildpack, err = buildpackStore.Get.
-		Execute(config.Npm)
-	Expect(err).ToNot(HaveOccurred())
-
-	tiniBuildpack, err = buildpackStore.Get.
-		Execute(config.Tini)
+	settings.Buildpacks.NPMInstall.Online, err = buildpackStore.Get.
+		Execute(settings.Config.NPMInstall)
 	Expect(err).ToNot(HaveOccurred())
 
 	SetDefaultEventuallyTimeout(10 * time.Second)

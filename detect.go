@@ -33,18 +33,6 @@ func Detect() packit.DetectFunc {
 							"launch": true,
 						},
 					},
-					{
-						Name: Npm,
-						Metadata: map[string]interface{}{
-							"launch": true,
-						},
-					},
-					{
-						Name: Tini,
-						Metadata: map[string]interface{}{
-							"launch": true,
-						},
-					},
 				},
 			},
 		}, nil

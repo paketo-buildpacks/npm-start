@@ -59,10 +59,9 @@ func testAppWithStartCmd(t *testing.T, context spec.G, it spec.S) {
 			var logs fmt.Stringer
 			image, logs, err = pack.WithNoColor().Build.
 				WithBuildpacks(
-					nodeBuildpack,
-					tiniBuildpack,
-					npmBuildpack,
-					buildpack,
+					settings.Buildpacks.NodeEngine.Online,
+					settings.Buildpacks.NPMInstall.Online,
+					settings.Buildpacks.NPMStart.Online,
 				).
 				WithNoPull().
 				Execute(name, source)
@@ -84,9 +83,9 @@ func testAppWithStartCmd(t *testing.T, context spec.G, it spec.S) {
 			Expect(string(content)).To(ContainSubstring("hello world"))
 
 			Expect(logs).To(ContainLines(
-				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, buildpackInfo.Buildpack.Name)),
-				"  Writing start command",
-				`    tini -g -- npm start`,
+				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
+				"  Assigning launch processes",
+				`    web: echo "prestart" && echo "start" && node server.js && echo "poststart"`,
 			))
 
 			cLogs := func() fmt.Stringer {
@@ -95,7 +94,8 @@ func testAppWithStartCmd(t *testing.T, context spec.G, it spec.S) {
 				return containerLogs
 			}
 
-			Eventually(cLogs).Should(ContainSubstring("This is the start command"))
+			Eventually(cLogs).Should(ContainSubstring("prestart"))
+			Eventually(cLogs).Should(ContainSubstring("start"))
 		})
 	})
 }
