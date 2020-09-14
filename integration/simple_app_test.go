@@ -59,10 +59,9 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 			var logs fmt.Stringer
 			image, logs, err = pack.WithNoColor().Build.
 				WithBuildpacks(
-					nodeBuildpack,
-					tiniBuildpack,
-					npmBuildpack,
-					buildpack,
+					settings.Buildpacks.NodeEngine.Online,
+					settings.Buildpacks.NPMInstall.Online,
+					settings.Buildpacks.NPMStart.Online,
 				).
 				WithNoPull().
 				Execute(name, source)
@@ -84,9 +83,9 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 			Expect(string(content)).To(ContainSubstring("hello world"))
 
 			Expect(logs).To(ContainLines(
-				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, buildpackInfo.Buildpack.Name)),
-				"  Writing start command",
-				`    tini -g -- npm start`,
+				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
+				"  Assigning launch processes",
+				"    web: node server.js",
 			))
 		})
 	})

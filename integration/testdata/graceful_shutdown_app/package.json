@@ -1,21 +1,21 @@
 {
-  "name": "gracefule_shutdown_app",
-  "version": "0.0.0",
-  "description": "some graceful app",
-  "main": "server.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
   "author": "",
-  "license": "",
   "dependencies": {
     "leftpad": "~0.0.1"
   },
+  "description": "some graceful app",
+  "engines": {
+    "node": "~10"
+  },
+  "license": "",
+  "main": "server.js",
+  "name": "graceful_shutdown_app",
   "repository": {
     "type": "git",
     "url": ""
   },
-  "engines": {
-    "node": "~10"
-  }
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "version": "0.0.0"
 }

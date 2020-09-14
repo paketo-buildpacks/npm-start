@@ -1,5 +1,4 @@
 {
   "node-engine": "github.com/paketo-buildpacks/node-engine",
-  "npm": "github.com/paketo-buildpacks/npm",
-  "tini": "github.com/paketo-buildpacks/tini"
+  "npm-install": "github.com/paketo-buildpacks/npm-install"
 }

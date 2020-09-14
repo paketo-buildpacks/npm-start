@@ -56,18 +56,6 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 							"launch": true,
 						},
 					},
-					{
-						Name: "npm",
-						Metadata: map[string]interface{}{
-							"launch": true,
-						},
-					},
-					{
-						Name: "tini",
-						Metadata: map[string]interface{}{
-							"launch": true,
-						},
-					},
 				},
 			}))
 		})

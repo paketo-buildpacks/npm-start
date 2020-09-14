@@ -3,8 +3,20 @@
 ## `gcr.io/paketo-buildpacks/npm-start`
 
 The NPM Start CNB sets the start command for the given application. The start
-command uses [tini](https://github.com/krallin/tini) as the init process to run
-`npm start`
+command is generated from the contents of `package.json`. For example, given a
+`package.json` with the following content:
+
+```json
+{
+  "scripts": {
+    "prestart": "<prestart-command>",
+    "poststart": "<poststart-command>",
+    "start": "<start-command>"
+  }
+}
+```
+
+The start command will be `<prestart-command> && <start-command> && <poststart-command>`.
 
 ## Integration
 
