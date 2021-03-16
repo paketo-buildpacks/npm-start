@@ -29,13 +29,13 @@ func Build(pathParser PathParser, logger scribe.Logger) packit.BuildFunc {
 
 		file, err := os.Open(filepath.Join(context.WorkingDir, projectPath, "package.json"))
 		if err != nil {
-			return packit.BuildResult{}, fmt.Errorf("Unable to open package.json: %w", err)
+			return packit.BuildResult{}, fmt.Errorf("unable to open package.json: %w", err)
 		}
 		defer file.Close()
 
 		err = json.NewDecoder(file).Decode(&pkg)
 		if err != nil {
-			return packit.BuildResult{}, fmt.Errorf("Unable to decode package.json: %w", err)
+			return packit.BuildResult{}, fmt.Errorf("unable to decode package.json: %w", err)
 		}
 
 		command := "node server.js"
