@@ -8,9 +8,19 @@ import (
 	"github.com/paketo-buildpacks/packit"
 )
 
-func Detect() packit.DetectFunc {
+//go:generate faux --interface PathParser --output fakes/path_parser.go
+type PathParser interface {
+	Get(path string) (projectPath string, err error)
+}
+
+func Detect(projectPathParser PathParser) packit.DetectFunc {
 	return func(context packit.DetectContext) (packit.DetectResult, error) {
-		_, err := os.Stat(filepath.Join(context.WorkingDir, "package.json"))
+		projectPath, err := projectPathParser.Get(context.WorkingDir)
+		if err != nil {
+			return packit.DetectResult{}, err
+		}
+
+		_, err = os.Stat(filepath.Join(context.WorkingDir, projectPath, "package.json"))
 		if err != nil {
 			if os.IsNotExist(err) {
 				return packit.DetectResult{}, packit.Fail

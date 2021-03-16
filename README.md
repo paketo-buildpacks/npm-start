@@ -38,9 +38,14 @@ pack build <app-name> -p <path-to-app> -b <path/to/node-engine.cnb> -b \
 <path/to/npm-install.cnb> -b build/buildpackage.cnb
 ```
 
-## `buildpack.yml` Configurations
+## Specifying a project path
 
-There are no extra configurations for this buildpack based on `buildpack.yml`.
+To specify a project subdirectory to be used as the root of the app, please use
+the `BP_NODE_PROJECT_PATH` environment variable at build time either directly
+(e.g. `pack build my-app --env BP_NODE_PROJECT_PATH=./src/my-app`) or through a
+[`project.toml`
+file](https://github.com/buildpacks/spec/blob/main/extensions/project-descriptor.md).
+This could be useful if your app is a part of a monorepo.
 
 ## Run Tests
 
