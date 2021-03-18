@@ -1,0 +1,23 @@
+{
+  "name": "simple_app",
+  "version": "0.0.0",
+  "description": "some app",
+  "scripts": {
+    "poststart": "echo \"poststart\"",
+    "prestart": "echo \"prestart\"",
+    "start": "echo \"start\" && node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "",
+  "dependencies": {
+    "leftpad": "~0.0.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": ""
+  },
+  "engines": {
+    "node": "~10"
+  }
+}

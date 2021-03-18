@@ -11,5 +11,6 @@ func TestUnitGoBuild(t *testing.T) {
 	suite := spec.New("npm-start", spec.Report(report.Terminal{}))
 	suite("Build", testBuild)
 	suite("Detect", testDetect)
+	suite("ProjectPathParser", testProjectPathParser)
 	suite.Run(t)
 }
