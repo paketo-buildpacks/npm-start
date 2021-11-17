@@ -2,7 +2,7 @@ package integration_test
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -82,7 +82,7 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(response.StatusCode).To(Equal(http.StatusOK))
 
-			content, err := ioutil.ReadAll(response.Body)
+			content, err := io.ReadAll(response.Body)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(ContainSubstring("hello world"))
 
@@ -92,5 +92,56 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 				"    web: node server.js",
 			))
 		})
+
+		context("when BP_LIVE_RELOAD_ENABLED=true during the build", func() {
+			it("builds an OCI image that has a reloadable default process and a non-reload process", func() {
+				var err error
+				source, err = occam.Source(filepath.Join("testdata", "simple_app"))
+				Expect(err).NotTo(HaveOccurred())
+
+				var logs fmt.Stringer
+				image, logs, err = pack.WithNoColor().Build.
+					WithPullPolicy("never").
+					WithBuildpacks(
+						settings.Buildpacks.Watchexec.Online,
+						settings.Buildpacks.NodeEngine.Online,
+						settings.Buildpacks.NPMInstall.Online,
+						settings.Buildpacks.NPMStart.Online,
+					).
+					WithEnv(map[string]string{
+						"BP_LIVE_RELOAD_ENABLED": "true",
+					}).
+					Execute(name, source)
+				Expect(err).NotTo(HaveOccurred(), logs.String())
+
+				Expect(logs).To(ContainLines(
+					MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
+					"  Assigning launch processes",
+					`    web: watchexec --restart --watch /workspace --ignore /workspace/package.json --ignore /workspace/package-lock.json --ignore /workspace/node_modules "node server.js"`,
+					"    no-reload: node server.js",
+					"",
+				))
+
+				container, err = docker.Container.Run.
+					WithEnv(map[string]string{"PORT": "8080"}).
+					WithPublish("8080").
+					WithPublishAll().
+					Execute(image.ID)
+				Expect(err).NotTo(HaveOccurred())
+
+				Eventually(container).Should(BeAvailable())
+
+				response, err := http.Get(fmt.Sprintf("http://localhost:%s", container.HostPort("8080")))
+				Expect(err).NotTo(HaveOccurred())
+				defer response.Body.Close()
+
+				Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+				content, err := io.ReadAll(response.Body)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(string(content)).To(ContainSubstring("hello world"))
+			})
+		})
 	})
+
 }
