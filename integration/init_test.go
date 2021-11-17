@@ -26,6 +26,9 @@ var settings struct {
 		NPMStart struct {
 			Online string
 		}
+		Watchexec struct {
+			Online string
+		}
 	}
 	Buildpack struct {
 		ID   string
@@ -34,6 +37,7 @@ var settings struct {
 	Config struct {
 		NodeEngine string `json:"node-engine"`
 		NPMInstall string `json:"npm-install"`
+		Watchexec  string `json:"watchexec"`
 	}
 }
 
@@ -68,6 +72,10 @@ func TestIntegration(t *testing.T) {
 
 	settings.Buildpacks.NPMInstall.Online, err = buildpackStore.Get.
 		Execute(settings.Config.NPMInstall)
+	Expect(err).ToNot(HaveOccurred())
+
+	settings.Buildpacks.Watchexec.Online, err = buildpackStore.Get.
+		Execute(settings.Config.Watchexec)
 	Expect(err).ToNot(HaveOccurred())
 
 	SetDefaultEventuallyTimeout(10 * time.Second)
