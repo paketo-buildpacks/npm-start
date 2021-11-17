@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/paketo-buildpacks/packit"
 	"github.com/paketo-buildpacks/packit/scribe"
@@ -58,8 +59,45 @@ func Build(pathParser PathParser, logger scribe.Logger) packit.BuildFunc {
 			command = fmt.Sprintf("cd %s && %s", projectPath, command)
 		}
 
+		processes := []packit.Process{
+			{
+				Type:    "web",
+				Command: command,
+				Default: true,
+			},
+		}
+
+		shouldReload, err := checkLiveReloadEnabled()
+		if err != nil {
+			return packit.BuildResult{}, err
+		}
+
+		if shouldReload {
+			processes = []packit.Process{
+				{
+					Type: "web",
+					Command: strings.Join([]string{
+						"watchexec",
+						"--restart",
+						fmt.Sprintf("--watch %s", filepath.Join(context.WorkingDir, projectPath)),
+						fmt.Sprintf("--ignore %s", filepath.Join(context.WorkingDir, projectPath, "package.json")),
+						fmt.Sprintf("--ignore %s", filepath.Join(context.WorkingDir, projectPath, "package-lock.json")),
+						fmt.Sprintf("--ignore %s", filepath.Join(context.WorkingDir, projectPath, "node_modules")),
+						fmt.Sprintf(`"%s"`, command),
+					}, " "),
+					Default: true,
+				},
+				{
+					Type:    "no-reload",
+					Command: command,
+				},
+			}
+		}
+
 		logger.Process("Assigning launch processes")
-		logger.Subprocess("web: %s", command)
+		for _, process := range processes {
+			logger.Subprocess("%s: %s", process.Type, process.Command)
+		}
 		logger.Break()
 
 		return packit.BuildResult{
@@ -67,13 +105,7 @@ func Build(pathParser PathParser, logger scribe.Logger) packit.BuildFunc {
 				Entries: []packit.BuildpackPlanEntry{},
 			},
 			Launch: packit.LaunchMetadata{
-				Processes: []packit.Process{
-					{
-						Type:    "web",
-						Command: command,
-						Default: true,
-					},
-				},
+				Processes: processes,
 			},
 		}, nil
 	}
