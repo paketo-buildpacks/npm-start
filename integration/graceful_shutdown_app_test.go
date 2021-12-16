@@ -15,7 +15,7 @@ import (
 
 	. "github.com/onsi/gomega"
 	. "github.com/paketo-buildpacks/occam/matchers"
-	"github.com/paketo-buildpacks/packit/pexec"
+	"github.com/paketo-buildpacks/packit/v2/pexec"
 )
 
 func testGracefulShutdown(t *testing.T, context spec.G, it spec.S) {

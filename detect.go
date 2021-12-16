@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/paketo-buildpacks/packit"
+	"github.com/paketo-buildpacks/packit/v2"
 )
 
 //go:generate faux --interface PathParser --output fakes/path_parser.go

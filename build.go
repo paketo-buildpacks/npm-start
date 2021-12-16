@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/paketo-buildpacks/packit"
-	"github.com/paketo-buildpacks/packit/scribe"
+	"github.com/paketo-buildpacks/packit/v2"
+	"github.com/paketo-buildpacks/packit/v2/scribe"
 )
 
 func Build(pathParser PathParser, logger scribe.Logger) packit.BuildFunc {
