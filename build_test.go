@@ -136,6 +136,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 					Command: "watchexec",
 					Args: []string{
 						"--restart",
+						"--shell", "none",
 						"--watch", filepath.Join(workingDir, "some-project-dir"),
 						"--ignore", filepath.Join(workingDir, "some-project-dir", "package.json"),
 						"--ignore", filepath.Join(workingDir, "some-project-dir", "package-lock.json"),

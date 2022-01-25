@@ -93,6 +93,7 @@ func Build(pathParser PathParser, logger scribe.Emitter) packit.BuildFunc {
 					Command: "watchexec",
 					Args: append([]string{
 						"--restart",
+						"--shell", "none",
 						"--watch", projectPath,
 						"--ignore", filepath.Join(projectPath, "package.json"),
 						"--ignore", filepath.Join(projectPath, "package-lock.json"),

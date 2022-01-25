@@ -130,7 +130,7 @@ func testProjectPath(t *testing.T, context spec.G, it spec.S) {
 					MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
 					"  Assigning launch processes:",
 
-					`    web (default): watchexec --restart --watch /workspace/server --ignore /workspace/server/package.json --ignore /workspace/server/package-lock.json --ignore /workspace/server/node_modules -- bash -c cd /workspace/server && echo "prestart" && echo "start" && node server.js && echo "poststart"`,
+					`    web (default): watchexec --restart --shell none --watch /workspace/server --ignore /workspace/server/package.json --ignore /workspace/server/package-lock.json --ignore /workspace/server/node_modules -- bash -c cd /workspace/server && echo "prestart" && echo "start" && node server.js && echo "poststart"`,
 					`    no-reload:     bash -c cd /workspace/server && echo "prestart" && echo "start" && node server.js && echo "poststart"`,
 					"",
 				))

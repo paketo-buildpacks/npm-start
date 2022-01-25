@@ -117,7 +117,7 @@ func testSimpleApp(t *testing.T, context spec.G, it spec.S) {
 				Expect(logs).To(ContainLines(
 					MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
 					"  Assigning launch processes:",
-					`    web (default): watchexec --restart --watch /workspace --ignore /workspace/package.json --ignore /workspace/package-lock.json --ignore /workspace/node_modules -- node /workspace/server.js`,
+					`    web (default): watchexec --restart --shell none --watch /workspace --ignore /workspace/package.json --ignore /workspace/package-lock.json --ignore /workspace/node_modules -- node /workspace/server.js`,
 					"    no-reload:     node /workspace/server.js",
 					"",
 				))
