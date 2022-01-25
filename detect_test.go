@@ -30,7 +30,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		Expect(os.Mkdir(filepath.Join(workingDir, "custom"), os.ModePerm)).To(Succeed())
 
 		projectPathParser = &fakes.PathParser{}
-		projectPathParser.GetCall.Returns.ProjectPath = "custom"
+		projectPathParser.GetCall.Returns.ProjectPath = filepath.Join(workingDir, "custom")
 
 		detect = npmstart.Detect(projectPathParser)
 	})
@@ -41,8 +41,9 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 	context("when there is a package.json", func() {
 		it.Before(func() {
-			Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), nil, 0644)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), nil, 0600)).To(Succeed())
 		})
+
 		it("detects", func() {
 			result, err := detect(packit.DetectContext{
 				WorkingDir: workingDir,
@@ -159,7 +160,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 		context("when BP_LIVE_RELOAD_ENABLED is set to an invalid value", func() {
 			it.Before(func() {
-				Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), nil, 0644)).To(Succeed())
+				Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), nil, 0600)).To(Succeed())
 				os.Setenv("BP_LIVE_RELOAD_ENABLED", "not-a-bool")
 			})
 

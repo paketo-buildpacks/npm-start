@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 )
 
-func Build(pathParser PathParser, logger scribe.Logger) packit.BuildFunc {
+func Build(pathParser PathParser, logger scribe.Emitter) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
@@ -28,7 +27,7 @@ func Build(pathParser PathParser, logger scribe.Logger) packit.BuildFunc {
 			return packit.BuildResult{}, err
 		}
 
-		file, err := os.Open(filepath.Join(context.WorkingDir, projectPath, "package.json"))
+		file, err := os.Open(filepath.Join(projectPath, "package.json"))
 		if err != nil {
 			return packit.BuildResult{}, fmt.Errorf("unable to open package.json: %w", err)
 		}
@@ -39,31 +38,46 @@ func Build(pathParser PathParser, logger scribe.Logger) packit.BuildFunc {
 			return packit.BuildResult{}, fmt.Errorf("unable to decode package.json: %w", err)
 		}
 
-		command := "node server.js"
+		command := "node"
+		arg := fmt.Sprintf("node %s", filepath.Join(context.WorkingDir, "server.js"))
 
 		if pkg.Scripts.Start != "" {
-			command = pkg.Scripts.Start
+			command = "bash"
+			arg = pkg.Scripts.Start
 		}
 
 		if pkg.Scripts.PreStart != "" {
-			command = fmt.Sprintf("%s && %s", pkg.Scripts.PreStart, command)
+			command = "bash"
+			arg = fmt.Sprintf("%s && %s", pkg.Scripts.PreStart, arg)
 		}
 
 		if pkg.Scripts.PostStart != "" {
-			command = fmt.Sprintf("%s && %s", command, pkg.Scripts.PostStart)
+			command = "bash"
+			arg = fmt.Sprintf("%s && %s", arg, pkg.Scripts.PostStart)
 		}
 
 		// Ideally we would like the lifecycle to support setting a custom working
 		// directory to run the launch process.  Until that happens we will cd in.
-		if projectPath != "" {
-			command = fmt.Sprintf("cd %s && %s", projectPath, command)
+		if projectPath != context.WorkingDir {
+			command = "bash"
+			arg = fmt.Sprintf("cd %s && %s", projectPath, arg)
+		}
+
+		args := []string{arg}
+		switch command {
+		case "bash":
+			args = []string{"-c", arg}
+		case "node":
+			args = []string{filepath.Join(context.WorkingDir, "server.js")}
 		}
 
 		processes := []packit.Process{
 			{
 				Type:    "web",
 				Command: command,
+				Args:    args,
 				Default: true,
+				Direct:  true,
 			},
 		}
 
@@ -75,30 +89,30 @@ func Build(pathParser PathParser, logger scribe.Logger) packit.BuildFunc {
 		if shouldReload {
 			processes = []packit.Process{
 				{
-					Type: "web",
-					Command: strings.Join([]string{
-						"watchexec",
+					Type:    "web",
+					Command: "watchexec",
+					Args: append([]string{
 						"--restart",
-						fmt.Sprintf("--watch %s", filepath.Join(context.WorkingDir, projectPath)),
-						fmt.Sprintf("--ignore %s", filepath.Join(context.WorkingDir, projectPath, "package.json")),
-						fmt.Sprintf("--ignore %s", filepath.Join(context.WorkingDir, projectPath, "package-lock.json")),
-						fmt.Sprintf("--ignore %s", filepath.Join(context.WorkingDir, projectPath, "node_modules")),
-						fmt.Sprintf(`"%s"`, command),
-					}, " "),
+						"--watch", projectPath,
+						"--ignore", filepath.Join(projectPath, "package.json"),
+						"--ignore", filepath.Join(projectPath, "package-lock.json"),
+						"--ignore", filepath.Join(projectPath, "node_modules"),
+						"--",
+						command,
+					}, args...),
 					Default: true,
+					Direct:  true,
 				},
 				{
 					Type:    "no-reload",
 					Command: command,
+					Args:    args,
+					Direct:  true,
 				},
 			}
 		}
 
-		logger.Process("Assigning launch processes")
-		for _, process := range processes {
-			logger.Subprocess("%s: %s", process.Type, process.Command)
-		}
-		logger.Break()
+		logger.LaunchProcesses(processes)
 
 		return packit.BuildResult{
 			Plan: packit.BuildpackPlan{

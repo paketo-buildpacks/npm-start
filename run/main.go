@@ -9,11 +9,13 @@ import (
 )
 
 func main() {
-	logger := scribe.NewLogger(os.Stdout)
 	projectPathParser := npmstart.NewProjectPathParser()
 
 	packit.Run(
 		npmstart.Detect(projectPathParser),
-		npmstart.Build(projectPathParser, logger),
+		npmstart.Build(
+			projectPathParser,
+			scribe.NewEmitter(os.Stdout),
+		),
 	)
 }
