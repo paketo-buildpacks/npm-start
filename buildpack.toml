@@ -5,6 +5,10 @@ api = "0.7"
   id = "paketo-buildpacks/npm-start"
   name = "Paketo NPM Start Buildpack"
 
+  [[buildpack.licenses]]
+    type = "Apache-2.0"
+    uri = "https://github.com/paketo-buildpacks/npm-start/blob/main/LICENSE"
+
 [metadata]
   include-files = ["bin/run", "bin/build", "bin/detect", "buildpack.toml"]
   pre-package = "./scripts/build.sh"
