@@ -12,5 +12,6 @@ func TestUnitGoBuild(t *testing.T) {
 	suite("Build", testBuild)
 	suite("Detect", testDetect)
 	suite("ProjectPathParser", testProjectPathParser)
+	suite("PackageJsonParser", testPackageJsonParser)
 	suite.Run(t)
 }
