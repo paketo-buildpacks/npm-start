@@ -1,9 +1,7 @@
 package npmstart
 
 import (
-	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/paketo-buildpacks/packit/v2"
@@ -14,28 +12,16 @@ func Build(pathParser PathParser, logger scribe.Emitter) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
-		var pkg struct {
-			Scripts struct {
-				PostStart string `json:"poststart"`
-				PreStart  string `json:"prestart"`
-				Start     string `json:"start"`
-			} `json:"scripts"`
-		}
-
 		projectPath, err := pathParser.Get(context.WorkingDir)
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
 
-		file, err := os.Open(filepath.Join(projectPath, "package.json"))
-		if err != nil {
-			return packit.BuildResult{}, fmt.Errorf("unable to open package.json: %w", err)
-		}
-		defer file.Close()
+		var pkg *PackageJson
 
-		err = json.NewDecoder(file).Decode(&pkg)
+		pkg, err = NewPackageJsonFromPath(filepath.Join(projectPath, "package.json"))
 		if err != nil {
-			return packit.BuildResult{}, fmt.Errorf("unable to decode package.json: %w", err)
+			return packit.BuildResult{}, err
 		}
 
 		command := "node"

@@ -1,6 +1,7 @@
 package npmstart_test
 
 import (
+	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -39,9 +40,16 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		Expect(os.RemoveAll(workingDir)).To(Succeed())
 	})
 
-	context("when there is a package.json", func() {
+	context("when there is a package.json with a start script", func() {
 		it.Before(func() {
-			Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), nil, 0600)).To(Succeed())
+			content := npmstart.PackageJson{Scripts: npmstart.PackageScripts{
+				Start: "node server.js",
+			}}
+
+			bytes, err := json.Marshal(content)
+			Expect(err).To(BeNil())
+
+			Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), bytes, 0600)).To(Succeed())
 		})
 
 		it("detects", func() {
@@ -118,6 +126,31 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		})
 	})
 
+	context("when there is a package.json without a start script", func() {
+		it.Before(func() {
+			content := npmstart.PackageJson{Scripts: npmstart.PackageScripts{
+				PreStart:  "npm run lint",
+				PostStart: "npm run test",
+			}}
+
+			bytes, err := json.Marshal(content)
+			Expect(err).To(BeNil())
+
+			Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), bytes, 0600)).To(Succeed())
+		})
+
+		it.After(func() {
+			Expect(os.RemoveAll(workingDir)).To(Succeed())
+		})
+
+		it("fails detection", func() {
+			_, err := detect(packit.DetectContext{
+				WorkingDir: workingDir,
+			})
+			Expect(err).To(MatchError(ContainSubstring(npmstart.NoStartScriptError)))
+		})
+	})
+
 	context("when there is no package.json", func() {
 		it("fails detection", func() {
 			_, err := detect(packit.DetectContext{
@@ -160,7 +193,14 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 		context("when BP_LIVE_RELOAD_ENABLED is set to an invalid value", func() {
 			it.Before(func() {
-				Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), nil, 0600)).To(Succeed())
+				content := npmstart.PackageJson{Scripts: npmstart.PackageScripts{
+					Start: "node server.js",
+				}}
+
+				bytes, err := json.Marshal(content)
+				Expect(err).To(BeNil())
+
+				Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), bytes, 0600)).To(Succeed())
 				os.Setenv("BP_LIVE_RELOAD_ENABLED", "not-a-bool")
 			})
 

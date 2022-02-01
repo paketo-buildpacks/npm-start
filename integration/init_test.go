@@ -86,7 +86,6 @@ func TestIntegration(t *testing.T) {
 	suite := spec.New("Integration", spec.Parallel(), spec.Report(report.Terminal{}))
 	suite("GracefulShutdown", testGracefulShutdown)
 	suite("ProjectPath", testProjectPath)
-	suite("SimpleApp", testSimpleApp)
 	suite("StartCommand", testAppWithStartCmd)
 	suite.Run(t)
 }
