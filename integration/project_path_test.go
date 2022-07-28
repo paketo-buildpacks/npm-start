@@ -71,7 +71,7 @@ func testProjectPath(t *testing.T, context spec.G, it spec.S) {
 			Expect(logs).To(ContainLines(
 				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
 				"  Assigning launch processes:",
-				`    web (default): bash -c cd /workspace/server && echo "prestart" && echo "start" && node server.js && echo "poststart"`,
+				ContainSubstring("web (default): sh /workspace/server/start.sh"),
 				"",
 			))
 
@@ -129,9 +129,8 @@ func testProjectPath(t *testing.T, context spec.G, it spec.S) {
 				Expect(logs).To(ContainLines(
 					MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
 					"  Assigning launch processes:",
-
-					`    web (default): watchexec --restart --shell none --watch /workspace/server --ignore /workspace/server/package.json --ignore /workspace/server/package-lock.json --ignore /workspace/server/node_modules -- bash -c cd /workspace/server && echo "prestart" && echo "start" && node server.js && echo "poststart"`,
-					`    no-reload:     bash -c cd /workspace/server && echo "prestart" && echo "start" && node server.js && echo "poststart"`,
+					ContainSubstring("web (default): watchexec --restart --shell none --watch /workspace/server --ignore /workspace/server/package.json --ignore /workspace/server/package-lock.json --ignore /workspace/server/node_modules -- sh /workspace/server/start.sh"),
+					ContainSubstring("no-reload:     sh /workspace/server/start.sh"),
 					"",
 				))
 

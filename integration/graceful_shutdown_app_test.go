@@ -91,10 +91,10 @@ func testGracefulShutdown(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(dockerStop(container.ID)).NotTo(HaveOccurred())
 
-			cLogs := func() fmt.Stringer {
+			cLogs := func() string {
 				containerLogs, err := docker.Container.Logs.Execute(container.ID)
 				Expect(err).NotTo(HaveOccurred())
-				return containerLogs
+				return containerLogs.String()
 			}
 
 			Eventually(cLogs).Should(ContainSubstring("echo from SIGTERM handler"))

@@ -2,6 +2,7 @@ package npmstart
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 
 	"github.com/paketo-buildpacks/packit/v2"
@@ -24,39 +25,29 @@ func Build(pathParser PathParser, logger scribe.Emitter) packit.BuildFunc {
 			return packit.BuildResult{}, err
 		}
 
-		command := "node"
-		arg := fmt.Sprintf("node %s", filepath.Join(context.WorkingDir, "server.js"))
-
-		if pkg.Scripts.Start != "" {
-			command = "bash"
-			arg = pkg.Scripts.Start
-		}
+		command := "sh"
+		arg := pkg.Scripts.Start
 
 		if pkg.Scripts.PreStart != "" {
-			command = "bash"
 			arg = fmt.Sprintf("%s && %s", pkg.Scripts.PreStart, arg)
 		}
 
 		if pkg.Scripts.PostStart != "" {
-			command = "bash"
 			arg = fmt.Sprintf("%s && %s", arg, pkg.Scripts.PostStart)
 		}
 
 		// Ideally we would like the lifecycle to support setting a custom working
 		// directory to run the launch process.  Until that happens we will cd in.
 		if projectPath != context.WorkingDir {
-			command = "bash"
 			arg = fmt.Sprintf("cd %s && %s", projectPath, arg)
 		}
 
-		args := []string{arg}
-		switch command {
-		case "bash":
-			args = []string{"-c", arg}
-		case "node":
-			args = []string{filepath.Join(context.WorkingDir, "server.js")}
+		script, err := createStartupScript(fmt.Sprintf(StartupScript, arg), projectPath, context.WorkingDir)
+		if err != nil {
+			return packit.BuildResult{}, err
 		}
 
+		args := []string{script}
 		processes := []packit.Process{
 			{
 				Type:    "web",
@@ -110,4 +101,27 @@ func Build(pathParser PathParser, logger scribe.Emitter) packit.BuildFunc {
 			},
 		}, nil
 	}
+}
+
+func createStartupScript(script, projectPath, workingDir string) (string, error) {
+	targetDir := workingDir
+	if projectPath != workingDir {
+		targetDir = projectPath
+	}
+
+	f, err := os.CreateTemp(targetDir, "start.sh")
+	if err != nil {
+		return "", err
+	}
+	err = f.Chmod(0744)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = f.WriteString(script)
+	if err != nil {
+		return "", err
+	}
+
+	return f.Name(), nil
 }
