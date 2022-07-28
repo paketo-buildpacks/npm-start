@@ -89,7 +89,7 @@ func testAppWithStartCmd(t *testing.T, context spec.G, it spec.S) {
 			Expect(logs).To(ContainLines(
 				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
 				"  Assigning launch processes:",
-				`    web (default): bash -c echo "prestart" && echo "start" && node server.js && echo "poststart"`,
+				ContainSubstring("web (default): sh /workspace/start.sh"),
 			))
 
 			cLogs := func() fmt.Stringer {
