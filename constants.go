@@ -10,4 +10,7 @@ const StartupScript = `trap 'kill -TERM $CPID' TERM
 trap 'kill -INT $CPID' INT
 ( %s ) &
 CPID="$!"
-wait $CPID`
+wait $CPID
+trap - TERM INT
+wait $CPID
+`

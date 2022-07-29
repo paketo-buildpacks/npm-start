@@ -1,5 +1,6 @@
 const http = require('http');
 const leftpad = require('leftpad');
+const { syncBuiltinESMExports } = require('module');
 
 const port = process.env.PORT || 8080;
 
@@ -9,7 +10,7 @@ const server = http.createServer((request, response) => {
 
 process.once('SIGTERM', function (code) {
       console.log('echo from SIGTERM handler');
-      server.close();
+      server.close(() => {process.exit()});
 });
 
 server.listen(port, (err) => {
