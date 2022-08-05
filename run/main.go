@@ -10,12 +10,13 @@ import (
 
 func main() {
 	projectPathParser := npmstart.NewProjectPathParser()
+	logger := scribe.NewEmitter(os.Stdout).WithLevel(os.Getenv("BP_LOG_LEVEL"))
 
 	packit.Run(
 		npmstart.Detect(projectPathParser),
 		npmstart.Build(
 			projectPathParser,
-			scribe.NewEmitter(os.Stdout),
+			logger,
 		),
 	)
 }
