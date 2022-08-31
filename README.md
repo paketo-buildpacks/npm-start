@@ -1,4 +1,4 @@
-# Paketo NPM Start Cloud Native Buildpack
+# Paketo Buildpack for NPM Start Cloud Native
 
 ## `gcr.io/paketo-buildpacks/npm-start`
 
