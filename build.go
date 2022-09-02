@@ -109,19 +109,11 @@ func createStartupScript(script, projectPath, workingDir string) (string, error)
 		targetDir = projectPath
 	}
 
-	f, err := os.CreateTemp(targetDir, "start.sh")
-	if err != nil {
-		return "", err
-	}
-	err = f.Chmod(0744)
-	if err != nil {
-		return "", err
-	}
-
-	_, err = f.WriteString(script)
+	path := filepath.Join(targetDir, "start.sh")
+	err := os.WriteFile(path, []byte(script), 0644)
 	if err != nil {
 		return "", err
 	}
 
-	return f.Name(), nil
+	return path, nil
 }
