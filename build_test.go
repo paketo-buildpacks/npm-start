@@ -9,6 +9,7 @@ import (
 
 	npmstart "github.com/paketo-buildpacks/npm-start"
 	"github.com/paketo-buildpacks/npm-start/fakes"
+	"github.com/paketo-buildpacks/npm-start/matchers"
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 	"github.com/sclevine/spec"
@@ -90,10 +91,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Args:    []string{startScript},
 		}))
 
-		Expect(startScript).To(BeARegularFile())
-		content, err := os.ReadFile(startScript)
-		Expect(err).NotTo(HaveOccurred())
-		Expect(string(content)).To(ContainSubstring("some-prestart-command && some-start-command && some-poststart-command"))
+		Expect(startScript).To(matchers.BeAFileWithSubstring("some-prestart-command && some-start-command && some-poststart-command"))
 
 		Expect(buffer.String()).To(ContainSubstring("Some Buildpack some-version"))
 		Expect(buffer.String()).To(ContainSubstring("Assigning launch processes:"))
@@ -130,10 +128,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Args:    []string{startScript},
 			}))
 
-			Expect(startScript).To(BeARegularFile())
-			content, err := os.ReadFile(startScript)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(content)).To(ContainSubstring("some-start-command && some-poststart-command"))
+			Expect(startScript).To(matchers.BeAFileWithSubstring("some-prestart-command && some-start-command && some-poststart-command"))
 
 			Expect(pathParser.GetCall.Receives.Path).To(Equal(workingDir))
 		})
@@ -168,10 +163,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Args:    []string{startScript},
 			}))
 
-			Expect(startScript).To(BeARegularFile())
-			content, err := os.ReadFile(startScript)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(content)).To(ContainSubstring("some-start-command && some-poststart-command"))
+			Expect(startScript).To(matchers.BeAFileWithSubstring("some-start-command && some-poststart-command"))
 		})
 	})
 
@@ -204,10 +196,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Args:    []string{startScript},
 			}))
 
-			Expect(startScript).To(BeARegularFile())
-			content, err := os.ReadFile(startScript)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(content)).To(ContainSubstring("some-prestart-command && some-start-command"))
+			Expect(startScript).To(matchers.BeAFileWithSubstring("some-prestart-command && some-start-command"))
 		})
 	})
 
@@ -249,10 +238,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Args:    []string{startScript},
 			}))
 
-			Expect(startScript).To(BeARegularFile())
-			content, err := os.ReadFile(startScript)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(content)).To(ContainSubstring("some-prestart-command && some-start-command && some-poststart-command"))
+			Expect(startScript).To(matchers.BeAFileWithSubstring("some-prestart-command && some-start-command && some-poststart-command"))
 		})
 	})
 
