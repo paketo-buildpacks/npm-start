@@ -26,6 +26,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		buffer     *bytes.Buffer
 		pathParser *fakes.PathParser
 
+		startScript string
+
 		buildContext packit.BuildContext
 		build        packit.BuildFunc
 	)
@@ -50,6 +52,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 		pathParser = &fakes.PathParser{}
 		pathParser.GetCall.Returns.ProjectPath = filepath.Join(workingDir, "some-project-dir")
+
+		startScript = fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)
 
 		buildContext = packit.BuildContext{
 			WorkingDir: workingDir,
@@ -83,12 +87,11 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Command: "sh",
 			Default: true,
 			Direct:  true,
-			Args:    []string{fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)},
+			Args:    []string{startScript},
 		}))
 
-		filename := result.Launch.Processes[0].Args[0]
-		Expect(filename).To(BeARegularFile())
-		content, err := os.ReadFile(filename)
+		Expect(startScript).To(BeARegularFile())
+		content, err := os.ReadFile(startScript)
 		Expect(err).NotTo(HaveOccurred())
 		Expect(string(content)).To(ContainSubstring("some-prestart-command && some-start-command && some-poststart-command"))
 
@@ -117,19 +120,18 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 					"--ignore", filepath.Join(workingDir, "some-project-dir", "package-lock.json"),
 					"--ignore", filepath.Join(workingDir, "some-project-dir", "node_modules"),
 					"--",
-					"sh", fmt.Sprintf("%s/some-project-dir/start.sh", workingDir),
+					"sh", startScript,
 				},
 			}, packit.Process{
 				Type:    "no-reload",
 				Command: "sh",
 				Default: false,
 				Direct:  true,
-				Args:    []string{fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)},
+				Args:    []string{startScript},
 			}))
 
-			filename := result.Launch.Processes[0].Args[13]
-			Expect(filename).To(BeARegularFile())
-			content, err := os.ReadFile(filename)
+			Expect(startScript).To(BeARegularFile())
+			content, err := os.ReadFile(startScript)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(ContainSubstring("some-start-command && some-poststart-command"))
 
@@ -163,12 +165,11 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Command: "sh",
 				Default: true,
 				Direct:  true,
-				Args:    []string{fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)},
+				Args:    []string{startScript},
 			}))
 
-			filename := result.Launch.Processes[0].Args[0]
-			Expect(filename).To(BeARegularFile())
-			content, err := os.ReadFile(filename)
+			Expect(startScript).To(BeARegularFile())
+			content, err := os.ReadFile(startScript)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(ContainSubstring("some-start-command && some-poststart-command"))
 		})
@@ -200,12 +201,11 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Command: "sh",
 				Default: true,
 				Direct:  true,
-				Args:    []string{fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)},
+				Args:    []string{startScript},
 			}))
 
-			filename := result.Launch.Processes[0].Args[0]
-			Expect(filename).To(BeARegularFile())
-			content, err := os.ReadFile(filename)
+			Expect(startScript).To(BeARegularFile())
+			content, err := os.ReadFile(startScript)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(ContainSubstring("some-prestart-command && some-start-command"))
 		})
@@ -214,6 +214,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	context("when the project-path env var is not set", func() {
 		it.Before(func() {
 			pathParser.GetCall.Returns.ProjectPath = workingDir
+
+			startScript = fmt.Sprintf("%s/start.sh", workingDir)
 
 			err := os.WriteFile(filepath.Join(workingDir, "package.json"), []byte(`{
 				"scripts": {
@@ -244,12 +246,11 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Command: "sh",
 				Default: true,
 				Direct:  true,
-				Args:    []string{fmt.Sprintf("%s/start.sh", workingDir)},
+				Args:    []string{startScript},
 			}))
 
-			filename := result.Launch.Processes[0].Args[0]
-			Expect(filename).To(BeARegularFile())
-			content, err := os.ReadFile(filename)
+			Expect(startScript).To(BeARegularFile())
+			content, err := os.ReadFile(startScript)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(ContainSubstring("some-prestart-command && some-start-command && some-poststart-command"))
 		})
