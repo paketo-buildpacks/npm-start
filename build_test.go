@@ -26,7 +26,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		buffer     *bytes.Buffer
 		pathParser *fakes.PathParser
 
-		build packit.BuildFunc
+		buildContext packit.BuildContext
+		build        packit.BuildFunc
 	)
 
 	it.Before(func() {
@@ -50,11 +51,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		pathParser = &fakes.PathParser{}
 		pathParser.GetCall.Returns.ProjectPath = filepath.Join(workingDir, "some-project-dir")
 
-		build = npmstart.Build(pathParser, logger)
-	})
-
-	it("returns a result that builds correctly", func() {
-		result, err := build(packit.BuildContext{
+		buildContext = packit.BuildContext{
 			WorkingDir: workingDir,
 			CNBPath:    cnbDir,
 			Stack:      "some-stack",
@@ -66,7 +63,13 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Entries: []packit.BuildpackPlanEntry{},
 			},
 			Layers: packit.Layers{Path: layersDir},
-		})
+		}
+
+		build = npmstart.Build(pathParser, logger)
+	})
+
+	it("returns a result that builds correctly", func() {
+		result, err := build(buildContext)
 		Expect(err).NotTo(HaveOccurred())
 
 		Expect(result.Plan).To(Equal(
@@ -100,19 +103,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("adds a reloadable start command that ignores package manager files and makes it the default", func() {
-			result, err := build(packit.BuildContext{
-				WorkingDir: workingDir,
-				CNBPath:    cnbDir,
-				Stack:      "some-stack",
-				BuildpackInfo: packit.BuildpackInfo{
-					Name:    "Some Buildpack",
-					Version: "some-version",
-				},
-				Plan: packit.BuildpackPlan{
-					Entries: []packit.BuildpackPlanEntry{},
-				},
-				Layers: packit.Layers{Path: layersDir},
-			})
+			result, err := build(buildContext)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result.Launch.Processes).To(HaveLen(2))
@@ -164,19 +155,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("specifies a valid start command", func() {
-			result, err := build(packit.BuildContext{
-				WorkingDir: workingDir,
-				CNBPath:    cnbDir,
-				Stack:      "some-stack",
-				BuildpackInfo: packit.BuildpackInfo{
-					Name:    "Some Buildpack",
-					Version: "some-version",
-				},
-				Plan: packit.BuildpackPlan{
-					Entries: []packit.BuildpackPlanEntry{},
-				},
-				Layers: packit.Layers{Path: layersDir},
-			})
+			result, err := build(buildContext)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result.Plan).To(Equal(
@@ -214,19 +193,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("specifies a valid start command", func() {
-			result, err := build(packit.BuildContext{
-				WorkingDir: workingDir,
-				CNBPath:    cnbDir,
-				Stack:      "some-stack",
-				BuildpackInfo: packit.BuildpackInfo{
-					Name:    "Some Buildpack",
-					Version: "some-version",
-				},
-				Plan: packit.BuildpackPlan{
-					Entries: []packit.BuildpackPlanEntry{},
-				},
-				Layers: packit.Layers{Path: layersDir},
-			})
+			result, err := build(buildContext)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result.Plan).To(Equal(
@@ -271,19 +238,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		it("returns a result with a valid start command", func() {
-			result, err := build(packit.BuildContext{
-				WorkingDir: workingDir,
-				CNBPath:    cnbDir,
-				Stack:      "some-stack",
-				BuildpackInfo: packit.BuildpackInfo{
-					Name:    "Some Buildpack",
-					Version: "some-version",
-				},
-				Plan: packit.BuildpackPlan{
-					Entries: []packit.BuildpackPlanEntry{},
-				},
-				Layers: packit.Layers{Path: layersDir},
-			})
+			result, err := build(buildContext)
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result.Plan).To(Equal(
@@ -317,19 +272,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			})
 
 			it("returns an error", func() {
-				_, err := build(packit.BuildContext{
-					WorkingDir: workingDir,
-					CNBPath:    cnbDir,
-					Stack:      "some-stack",
-					BuildpackInfo: packit.BuildpackInfo{
-						Name:    "Some Buildpack",
-						Version: "some-version",
-					},
-					Plan: packit.BuildpackPlan{
-						Entries: []packit.BuildpackPlanEntry{},
-					},
-					Layers: packit.Layers{Path: layersDir},
-				})
+				_, err := build(buildContext)
 				Expect(err).To(MatchError(ContainSubstring("no such file or directory")))
 			})
 		})
@@ -340,19 +283,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			})
 
 			it("returns an error", func() {
-				_, err := build(packit.BuildContext{
-					WorkingDir: workingDir,
-					CNBPath:    cnbDir,
-					Stack:      "some-stack",
-					BuildpackInfo: packit.BuildpackInfo{
-						Name:    "Some Buildpack",
-						Version: "some-version",
-					},
-					Plan: packit.BuildpackPlan{
-						Entries: []packit.BuildpackPlanEntry{},
-					},
-					Layers: packit.Layers{Path: layersDir},
-				})
+				_, err := build(buildContext)
 				Expect(err).To(MatchError(ContainSubstring("invalid character '%'")))
 			})
 		})
@@ -363,19 +294,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			})
 
 			it("returns an error", func() {
-				_, err := build(packit.BuildContext{
-					WorkingDir: workingDir,
-					CNBPath:    cnbDir,
-					Stack:      "some-stack",
-					BuildpackInfo: packit.BuildpackInfo{
-						Name:    "Some Buildpack",
-						Version: "some-version",
-					},
-					Plan: packit.BuildpackPlan{
-						Entries: []packit.BuildpackPlanEntry{},
-					},
-					Layers: packit.Layers{Path: layersDir},
-				})
+				_, err := build(buildContext)
 				Expect(err).To(MatchError(ContainSubstring("failed to parse BP_LIVE_RELOAD_ENABLED value not-a-bool")))
 			})
 		})
