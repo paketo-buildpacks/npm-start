@@ -22,21 +22,14 @@ func testProjectPathParser(t *testing.T, context spec.G, it spec.S) {
 	)
 
 	it.Before(func() {
-		var err error
-		workingDir, err = os.MkdirTemp("", "working-dir")
-		Expect(err).NotTo(HaveOccurred())
+		workingDir = t.TempDir()
 
 		projectDir = filepath.Join(workingDir, "custom", "path")
-		err = os.MkdirAll(projectDir, os.ModePerm)
+		err := os.MkdirAll(projectDir, os.ModePerm)
 		Expect(err).NotTo(HaveOccurred())
 
 		projectPathParser = npmstart.NewProjectPathParser()
-		os.Setenv("BP_NODE_PROJECT_PATH", "custom/path")
-	})
-
-	it.After(func() {
-		Expect(os.RemoveAll(workingDir)).To(Succeed())
-		os.Unsetenv("BP_NODE_PROJECT_PATH")
+		t.Setenv("BP_NODE_PROJECT_PATH", "custom/path")
 	})
 
 	context("Get", func() {
@@ -65,11 +58,7 @@ func testProjectPathParser(t *testing.T, context spec.G, it spec.S) {
 
 		context("when the project path subdirectory does not exist", func() {
 			it.Before(func() {
-				os.Setenv("BP_NODE_PROJECT_PATH", "some-garbage")
-			})
-
-			it.After(func() {
-				os.Unsetenv("BP_NODE_PROJECT_PATH")
+				t.Setenv("BP_NODE_PROJECT_PATH", "some-garbage")
 			})
 
 			it("returns an error", func() {

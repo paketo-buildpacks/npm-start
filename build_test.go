@@ -30,18 +30,12 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	)
 
 	it.Before(func() {
-		var err error
-		layersDir, err = os.MkdirTemp("", "layers")
-		Expect(err).NotTo(HaveOccurred())
-
-		cnbDir, err = os.MkdirTemp("", "cnb")
-		Expect(err).NotTo(HaveOccurred())
-
-		workingDir, err = os.MkdirTemp("", "working-dir")
-		Expect(err).NotTo(HaveOccurred())
+		layersDir = t.TempDir()
+		cnbDir = t.TempDir()
+		workingDir = t.TempDir()
 
 		Expect(os.Mkdir(filepath.Join(workingDir, "some-project-dir"), os.ModePerm)).To(Succeed())
-		err = os.WriteFile(filepath.Join(workingDir, "some-project-dir", "package.json"), []byte(`{
+		err := os.WriteFile(filepath.Join(workingDir, "some-project-dir", "package.json"), []byte(`{
 			"scripts": {
 				"prestart": "some-prestart-command",
 				"start": "some-start-command",
@@ -57,12 +51,6 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		pathParser.GetCall.Returns.ProjectPath = filepath.Join(workingDir, "some-project-dir")
 
 		build = npmstart.Build(pathParser, logger)
-	})
-
-	it.After(func() {
-		Expect(os.RemoveAll(layersDir)).To(Succeed())
-		Expect(os.RemoveAll(cnbDir)).To(Succeed())
-		Expect(os.RemoveAll(workingDir)).To(Succeed())
 	})
 
 	it("returns a result that builds correctly", func() {
@@ -108,11 +96,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 	context("when BP_LIVE_RELOAD_ENABLED=true in the build environment", func() {
 		it.Before(func() {
-			os.Setenv("BP_LIVE_RELOAD_ENABLED", "true")
-		})
-
-		it.After(func() {
-			os.Unsetenv("BP_LIVE_RELOAD_ENABLED")
+			t.Setenv("BP_LIVE_RELOAD_ENABLED", "true")
 		})
 
 		it("adds a reloadable start command that ignores package manager files and makes it the default", func() {
@@ -375,11 +359,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 		context("when BP_LIVE_RELOAD_ENABLED is set to an invalid value", func() {
 			it.Before(func() {
-				os.Setenv("BP_LIVE_RELOAD_ENABLED", "not-a-bool")
-			})
-
-			it.After(func() {
-				os.Unsetenv("BP_LIVE_RELOAD_ENABLED")
+				t.Setenv("BP_LIVE_RELOAD_ENABLED", "not-a-bool")
 			})
 
 			it("returns an error", func() {
