@@ -77,17 +77,16 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Entries: []packit.BuildpackPlanEntry{},
 			},
 		))
-		processes := result.Launch.Processes
-		Expect(processes).To(HaveLen(1))
-		process := processes[0]
-		Expect(process.Type).To(Equal("web"))
-		Expect(process.Command).To(Equal("sh"))
-		Expect(process.Default).To(BeTrue())
-		Expect(process.Direct).To(BeTrue())
-		Expect(process.Args).To(HaveLen(1))
-		Expect(process.Args[0]).To(ContainSubstring(fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)))
 
-		filename := process.Args[0]
+		Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
+			Type:    "web",
+			Command: "sh",
+			Default: true,
+			Direct:  true,
+			Args:    []string{fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)},
+		}))
+
+		filename := result.Launch.Processes[0].Args[0]
 		Expect(filename).To(BeARegularFile())
 		content, err := os.ReadFile(filename)
 		Expect(err).NotTo(HaveOccurred())
@@ -106,38 +105,33 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			result, err := build(buildContext)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(result.Launch.Processes).To(HaveLen(2))
-			processWeb := result.Launch.Processes[0]
-			Expect(processWeb.Type).To(Equal("web"))
-			Expect(processWeb.Command).To(Equal("watchexec"))
-			Expect(processWeb.Args).To(HaveLen(14))
-			Expect(processWeb.Args).To(ContainElements(
-				"--restart",
-				"--shell", "none",
-				"--watch", filepath.Join(workingDir, "some-project-dir"),
-				"--ignore", filepath.Join(workingDir, "some-project-dir", "package.json"),
-				"--ignore", filepath.Join(workingDir, "some-project-dir", "package-lock.json"),
-				"--ignore", filepath.Join(workingDir, "some-project-dir", "node_modules"),
-				"--",
-				"sh",
-			))
-			Expect(processWeb.Args[13]).To(ContainSubstring(fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)))
-			Expect(processWeb.Default).To(BeTrue())
-			Expect(processWeb.Direct).To(BeTrue())
+			Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
+				Type:    "web",
+				Command: "watchexec",
+				Default: true,
+				Direct:  true,
+				Args: []string{"--restart",
+					"--shell", "none",
+					"--watch", filepath.Join(workingDir, "some-project-dir"),
+					"--ignore", filepath.Join(workingDir, "some-project-dir", "package.json"),
+					"--ignore", filepath.Join(workingDir, "some-project-dir", "package-lock.json"),
+					"--ignore", filepath.Join(workingDir, "some-project-dir", "node_modules"),
+					"--",
+					"sh", fmt.Sprintf("%s/some-project-dir/start.sh", workingDir),
+				},
+			}, packit.Process{
+				Type:    "no-reload",
+				Command: "sh",
+				Default: false,
+				Direct:  true,
+				Args:    []string{fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)},
+			}))
 
-			filename := processWeb.Args[13]
+			filename := result.Launch.Processes[0].Args[13]
 			Expect(filename).To(BeARegularFile())
 			content, err := os.ReadFile(filename)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(ContainSubstring("some-start-command && some-poststart-command"))
-
-			processNoReload := result.Launch.Processes[1]
-			Expect(processNoReload.Type).To(Equal("no-reload"))
-			Expect(processNoReload.Command).To(Equal("sh"))
-			Expect(processNoReload.Args).To(HaveLen(1))
-			Expect(processNoReload.Args[0]).To(ContainSubstring(fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)))
-			Expect(processNoReload.Default).To(BeFalse())
-			Expect(processNoReload.Direct).To(BeTrue())
 
 			Expect(pathParser.GetCall.Receives.Path).To(Equal(workingDir))
 		})
@@ -163,17 +157,16 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 					Entries: []packit.BuildpackPlanEntry{},
 				},
 			))
-			processes := result.Launch.Processes
-			Expect(processes).To(HaveLen(1))
-			process := processes[0]
-			Expect(process.Type).To(Equal("web"))
-			Expect(process.Command).To(Equal("sh"))
-			Expect(process.Default).To(BeTrue())
-			Expect(process.Direct).To(BeTrue())
-			Expect(process.Args).To(HaveLen(1))
-			Expect(process.Args[0]).To(ContainSubstring(fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)))
 
-			filename := process.Args[0]
+			Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
+				Type:    "web",
+				Command: "sh",
+				Default: true,
+				Direct:  true,
+				Args:    []string{fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)},
+			}))
+
+			filename := result.Launch.Processes[0].Args[0]
 			Expect(filename).To(BeARegularFile())
 			content, err := os.ReadFile(filename)
 			Expect(err).NotTo(HaveOccurred())
@@ -201,17 +194,16 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 					Entries: []packit.BuildpackPlanEntry{},
 				},
 			))
-			processes := result.Launch.Processes
-			Expect(processes).To(HaveLen(1))
-			process := processes[0]
-			Expect(process.Type).To(Equal("web"))
-			Expect(process.Command).To(Equal("sh"))
-			Expect(process.Default).To(BeTrue())
-			Expect(process.Direct).To(BeTrue())
-			Expect(process.Args).To(HaveLen(1))
-			Expect(process.Args[0]).To(ContainSubstring(fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)))
 
-			filename := process.Args[0]
+			Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
+				Type:    "web",
+				Command: "sh",
+				Default: true,
+				Direct:  true,
+				Args:    []string{fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)},
+			}))
+
+			filename := result.Launch.Processes[0].Args[0]
 			Expect(filename).To(BeARegularFile())
 			content, err := os.ReadFile(filename)
 			Expect(err).NotTo(HaveOccurred())
@@ -246,22 +238,20 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 					Entries: []packit.BuildpackPlanEntry{},
 				},
 			))
-			processes := result.Launch.Processes
-			Expect(processes).To(HaveLen(1))
-			process := processes[0]
-			Expect(process.Type).To(Equal("web"))
-			Expect(process.Command).To(Equal("sh"))
-			Expect(process.Default).To(BeTrue())
-			Expect(process.Direct).To(BeTrue())
-			Expect(process.Args).To(HaveLen(1))
-			Expect(process.Args[0]).To(ContainSubstring(fmt.Sprintf("%s/start.sh", workingDir)))
 
-			filename := process.Args[0]
+			Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
+				Type:    "web",
+				Command: "sh",
+				Default: true,
+				Direct:  true,
+				Args:    []string{fmt.Sprintf("%s/start.sh", workingDir)},
+			}))
+
+			filename := result.Launch.Processes[0].Args[0]
 			Expect(filename).To(BeARegularFile())
 			content, err := os.ReadFile(filename)
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(ContainSubstring("some-prestart-command && some-start-command && some-poststart-command"))
-
 		})
 	})
 
