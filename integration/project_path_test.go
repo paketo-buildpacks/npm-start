@@ -129,7 +129,7 @@ func testProjectPath(t *testing.T, context spec.G, it spec.S) {
 				Expect(logs).To(ContainLines(
 					MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
 					"  Assigning launch processes:",
-					ContainSubstring("web (default): watchexec --restart --shell none --watch /workspace/server --ignore /workspace/server/package.json --ignore /workspace/server/package-lock.json --ignore /workspace/server/node_modules -- sh /workspace/server/start.sh"),
+					ContainSubstring("web (default): watchexec --restart --watch /workspace/server --ignore /workspace/server/package.json --ignore /workspace/server/package-lock.json --ignore /workspace/server/node_modules --shell none -- sh /workspace/server/start.sh"),
 					ContainSubstring("no-reload:     sh /workspace/server/start.sh"),
 					"",
 				))

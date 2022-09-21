@@ -19,9 +19,12 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 	var (
 		Expect = NewWithT(t).Expect
 
-		workingDir        string
+		workingDir string
+
 		projectPathParser *fakes.PathParser
-		detect            packit.DetectFunc
+		reloader          *fakes.Reloader
+
+		detect packit.DetectFunc
 	)
 
 	it.Before(func() {
@@ -31,7 +34,9 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 		projectPathParser = &fakes.PathParser{}
 		projectPathParser.GetCall.Returns.ProjectPath = filepath.Join(workingDir, "custom")
 
-		detect = npmstart.Detect(projectPathParser)
+		reloader = &fakes.Reloader{}
+
+		detect = npmstart.Detect(projectPathParser, reloader)
 	})
 
 	context("when there is a package.json with a start script", func() {
@@ -76,9 +81,9 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			Expect(projectPathParser.GetCall.Receives.Path).To(Equal(filepath.Join(workingDir)))
 		})
 
-		context("and BP_LIVE_RELOAD_ENABLED = true", func() {
+		context("when live reload is enabled", func() {
 			it.Before(func() {
-				t.Setenv("BP_LIVE_RELOAD_ENABLED", "true")
+				reloader.ShouldEnableLiveReloadCall.Returns.Bool = true
 			})
 
 			it("requires watchexec at launch", func() {
@@ -183,7 +188,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 			})
 		})
 
-		context("when BP_LIVE_RELOAD_ENABLED is set to an invalid value", func() {
+		context("the reloader returns an error", func() {
 			it.Before(func() {
 				content := npmstart.PackageJson{Scripts: npmstart.PackageScripts{
 					Start: "node server.js",
@@ -193,14 +198,15 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 				Expect(err).To(BeNil())
 
 				Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), bytes, 0600)).To(Succeed())
-				t.Setenv("BP_LIVE_RELOAD_ENABLED", "not-a-bool")
+
+				reloader.ShouldEnableLiveReloadCall.Returns.Error = errors.New("reloader error")
 			})
 
 			it("returns an error", func() {
 				_, err := detect(packit.DetectContext{
 					WorkingDir: workingDir,
 				})
-				Expect(err).To(MatchError(ContainSubstring("failed to parse BP_LIVE_RELOAD_ENABLED value not-a-bool")))
+				Expect(err).To(MatchError("reloader error"))
 			})
 		})
 	})

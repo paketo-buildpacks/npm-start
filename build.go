@@ -5,11 +5,12 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/paketo-buildpacks/libreload-packit"
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 )
 
-func Build(pathParser PathParser, logger scribe.Emitter) packit.BuildFunc {
+func Build(pathParser PathParser, logger scribe.Emitter, reloader Reloader) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
@@ -48,46 +49,31 @@ func Build(pathParser PathParser, logger scribe.Emitter) packit.BuildFunc {
 		}
 
 		args := []string{script}
-		processes := []packit.Process{
-			{
-				Type:    "web",
-				Command: command,
-				Args:    args,
-				Default: true,
-				Direct:  true,
-			},
+		originalProcess := packit.Process{
+			Type:    "web",
+			Command: command,
+			Args:    args,
+			Default: true,
+			Direct:  true,
 		}
+		var processes []packit.Process
 
-		shouldReload, err := checkLiveReloadEnabled()
-		if err != nil {
+		if shouldEnableReload, err := reloader.ShouldEnableLiveReload(); err != nil {
 			return packit.BuildResult{}, err
-		}
-
-		if shouldReload {
-			processes = []packit.Process{
-				{
-					Type:    "web",
-					Command: "watchexec",
-					Args: append([]string{
-						"--restart",
-						"--shell", "none",
-						"--watch", projectPath,
-						"--ignore", filepath.Join(projectPath, "package.json"),
-						"--ignore", filepath.Join(projectPath, "package-lock.json"),
-						"--ignore", filepath.Join(projectPath, "node_modules"),
-						"--",
-						command,
-					}, args...),
-					Default: true,
-					Direct:  true,
+		} else if shouldEnableReload {
+			nonReloadableProcess, reloadableProcess := reloader.TransformReloadableProcesses(originalProcess, libreload.ReloadableProcessSpec{
+				WatchPaths: []string{projectPath},
+				IgnorePaths: []string{
+					filepath.Join(projectPath, "package.json"),
+					filepath.Join(projectPath, "package-lock.json"),
+					filepath.Join(projectPath, "node_modules"),
 				},
-				{
-					Type:    "no-reload",
-					Command: command,
-					Args:    args,
-					Direct:  true,
-				},
-			}
+			})
+			nonReloadableProcess.Type = "no-reload"
+			reloadableProcess.Type = "web"
+			processes = append(processes, reloadableProcess, nonReloadableProcess)
+		} else {
+			processes = append(processes, originalProcess)
 		}
 
 		logger.LaunchProcesses(processes)

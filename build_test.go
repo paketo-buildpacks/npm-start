@@ -2,11 +2,13 @@ package npmstart_test
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/paketo-buildpacks/libreload-packit"
 	npmstart "github.com/paketo-buildpacks/npm-start"
 	"github.com/paketo-buildpacks/npm-start/fakes"
 	"github.com/paketo-buildpacks/npm-start/matchers"
@@ -26,6 +28,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		cnbDir     string
 		buffer     *bytes.Buffer
 		pathParser *fakes.PathParser
+		reloader   *fakes.Reloader
 
 		startScript string
 
@@ -54,6 +57,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		pathParser = &fakes.PathParser{}
 		pathParser.GetCall.Returns.ProjectPath = filepath.Join(workingDir, "some-project-dir")
 
+		reloader = &fakes.Reloader{}
+
 		startScript = fmt.Sprintf("%s/some-project-dir/start.sh", workingDir)
 
 		buildContext = packit.BuildContext{
@@ -70,7 +75,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Layers: packit.Layers{Path: layersDir},
 		}
 
-		build = npmstart.Build(pathParser, logger)
+		build = npmstart.Build(pathParser, logger, reloader)
 	})
 
 	it("returns a result that builds correctly", func() {
@@ -97,35 +102,46 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		Expect(buffer.String()).To(ContainSubstring("Assigning launch processes:"))
 	})
 
-	context("when BP_LIVE_RELOAD_ENABLED=true in the build environment", func() {
+	context("when live reload is enabled", func() {
 		it.Before(func() {
-			t.Setenv("BP_LIVE_RELOAD_ENABLED", "true")
+			reloader.ShouldEnableLiveReloadCall.Returns.Bool = true
+			reloader.TransformReloadableProcessesCall.Returns.Reloadable = packit.Process{
+				Type:    "Reloadable",
+				Command: "Reloadable",
+			}
+			reloader.TransformReloadableProcessesCall.Returns.NonReloadable = packit.Process{
+				Type:    "NonReloadable",
+				Command: "NonReloadable",
+			}
 		})
 
 		it("adds a reloadable start command that ignores package manager files and makes it the default", func() {
 			result, err := build(buildContext)
 			Expect(err).NotTo(HaveOccurred())
 
-			Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
+			Expect(reloader.TransformReloadableProcessesCall.Receives.OriginalProcess).To(Equal(packit.Process{
 				Type:    "web",
-				Command: "watchexec",
+				Command: "sh",
 				Default: true,
 				Direct:  true,
-				Args: []string{"--restart",
-					"--shell", "none",
-					"--watch", filepath.Join(workingDir, "some-project-dir"),
-					"--ignore", filepath.Join(workingDir, "some-project-dir", "package.json"),
-					"--ignore", filepath.Join(workingDir, "some-project-dir", "package-lock.json"),
-					"--ignore", filepath.Join(workingDir, "some-project-dir", "node_modules"),
-					"--",
-					"sh", startScript,
+				Args:    []string{startScript},
+			}))
+
+			Expect(reloader.TransformReloadableProcessesCall.Receives.Spec).To(Equal(libreload.ReloadableProcessSpec{
+				IgnorePaths: []string{
+					filepath.Join(workingDir, "some-project-dir", "package.json"),
+					filepath.Join(workingDir, "some-project-dir", "package-lock.json"),
+					filepath.Join(workingDir, "some-project-dir", "node_modules"),
 				},
+				WatchPaths: []string{filepath.Join(workingDir, "some-project-dir")},
+			}))
+
+			Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
+				Type:    "web",
+				Command: "Reloadable",
 			}, packit.Process{
 				Type:    "no-reload",
-				Command: "sh",
-				Default: false,
-				Direct:  true,
-				Args:    []string{startScript},
+				Command: "NonReloadable",
 			}))
 
 			Expect(startScript).To(matchers.BeAFileWithSubstring("some-prestart-command && some-start-command && some-poststart-command"))
@@ -265,14 +281,14 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			})
 		})
 
-		context("when BP_LIVE_RELOAD_ENABLED is set to an invalid value", func() {
+		context("when the reloader returns an error", func() {
 			it.Before(func() {
-				t.Setenv("BP_LIVE_RELOAD_ENABLED", "not-a-bool")
+				reloader.ShouldEnableLiveReloadCall.Returns.Error = errors.New("some error")
 			})
 
 			it("returns an error", func() {
 				_, err := build(buildContext)
-				Expect(err).To(MatchError(ContainSubstring("failed to parse BP_LIVE_RELOAD_ENABLED value not-a-bool")))
+				Expect(err).To(MatchError("some error"))
 			})
 		})
 	})

@@ -4,10 +4,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 
+	"github.com/paketo-buildpacks/libreload-packit"
 	"github.com/paketo-buildpacks/packit/v2"
 )
+
+type Reloader libreload.Reloader
+
+//go:generate faux --interface Reloader --output fakes/reloader.go
 
 //go:generate faux --interface PathParser --output fakes/path_parser.go
 type PathParser interface {
@@ -16,7 +20,7 @@ type PathParser interface {
 
 const NoStartScriptError = "no start script in package.json"
 
-func Detect(projectPathParser PathParser) packit.DetectFunc {
+func Detect(projectPathParser PathParser, reloader Reloader) packit.DetectFunc {
 	return func(context packit.DetectContext) (packit.DetectResult, error) {
 		projectPath, err := projectPathParser.Get(context.WorkingDir)
 		if err != nil {
@@ -61,12 +65,9 @@ func Detect(projectPathParser PathParser) packit.DetectFunc {
 			},
 		}
 
-		shouldReload, err := checkLiveReloadEnabled()
-		if err != nil {
+		if shouldReload, err := reloader.ShouldEnableLiveReload(); err != nil {
 			return packit.DetectResult{}, err
-		}
-
-		if shouldReload {
+		} else if shouldReload {
 			requirements = append(requirements, packit.BuildPlanRequirement{
 				Name: "watchexec",
 				Metadata: map[string]interface{}{
@@ -81,15 +82,4 @@ func Detect(projectPathParser PathParser) packit.DetectFunc {
 			},
 		}, nil
 	}
-}
-
-func checkLiveReloadEnabled() (bool, error) {
-	if reload, ok := os.LookupEnv("BP_LIVE_RELOAD_ENABLED"); ok {
-		shouldEnableReload, err := strconv.ParseBool(reload)
-		if err != nil {
-			return false, fmt.Errorf("failed to parse BP_LIVE_RELOAD_ENABLED value %s: %w", reload, err)
-		}
-		return shouldEnableReload, nil
-	}
-	return false, nil
 }
