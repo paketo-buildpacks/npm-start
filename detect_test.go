@@ -25,19 +25,13 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 	)
 
 	it.Before(func() {
-		var err error
-		workingDir, err = os.MkdirTemp("", "working-dir")
-		Expect(err).NotTo(HaveOccurred())
+		workingDir = t.TempDir()
 		Expect(os.Mkdir(filepath.Join(workingDir, "custom"), os.ModePerm)).To(Succeed())
 
 		projectPathParser = &fakes.PathParser{}
 		projectPathParser.GetCall.Returns.ProjectPath = filepath.Join(workingDir, "custom")
 
 		detect = npmstart.Detect(projectPathParser)
-	})
-
-	it.After(func() {
-		Expect(os.RemoveAll(workingDir)).To(Succeed())
 	})
 
 	context("when there is a package.json with a start script", func() {
@@ -84,11 +78,9 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 		context("and BP_LIVE_RELOAD_ENABLED = true", func() {
 			it.Before(func() {
-				os.Setenv("BP_LIVE_RELOAD_ENABLED", "true")
+				t.Setenv("BP_LIVE_RELOAD_ENABLED", "true")
 			})
-			it.After(func() {
-				os.Unsetenv("BP_LIVE_RELOAD_ENABLED")
-			})
+
 			it("requires watchexec at launch", func() {
 				result, err := detect(packit.DetectContext{
 					WorkingDir: workingDir,
@@ -201,11 +193,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 				Expect(err).To(BeNil())
 
 				Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), bytes, 0600)).To(Succeed())
-				os.Setenv("BP_LIVE_RELOAD_ENABLED", "not-a-bool")
-			})
-
-			it.After(func() {
-				os.Unsetenv("BP_LIVE_RELOAD_ENABLED")
+				t.Setenv("BP_LIVE_RELOAD_ENABLED", "not-a-bool")
 			})
 
 			it("returns an error", func() {

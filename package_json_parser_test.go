@@ -18,9 +18,7 @@ func testPackageJsonParser(t *testing.T, context spec.G, it spec.S) {
 		var workingDir string
 
 		it.Before(func() {
-			var err error
-			workingDir, err = os.MkdirTemp("", "working-dir")
-			Expect(err).NotTo(HaveOccurred())
+			workingDir = t.TempDir()
 
 			content := `{
 				"scripts": {
@@ -33,10 +31,6 @@ func testPackageJsonParser(t *testing.T, context spec.G, it spec.S) {
 
 			packageLocation = filepath.Join(workingDir, "package.json")
 			Expect(os.WriteFile(packageLocation, []byte(content), 0600)).To(Succeed())
-		})
-
-		it.After(func() {
-			Expect(os.RemoveAll(workingDir)).To(Succeed())
 		})
 
 		it("successfully extracts the scripts information", func() {
@@ -54,9 +48,7 @@ func testPackageJsonParser(t *testing.T, context spec.G, it spec.S) {
 		var workingDir string
 
 		it.Before(func() {
-			var err error
-			workingDir, err = os.MkdirTemp("", "working-dir")
-			Expect(err).NotTo(HaveOccurred())
+			workingDir = t.TempDir()
 
 			packageLocation = filepath.Join(workingDir, "package.json")
 			Expect(os.WriteFile(packageLocation, nil, 0600)).To(Succeed())
