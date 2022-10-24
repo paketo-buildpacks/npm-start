@@ -3,7 +3,7 @@ module github.com/paketo-buildpacks/npm-start
 go 1.19
 
 require (
-	github.com/BurntSushi/toml v1.2.0
+	github.com/BurntSushi/toml v1.2.1
 	github.com/onsi/gomega v1.22.1
 	github.com/paketo-buildpacks/libreload-packit v0.0.1
 	github.com/paketo-buildpacks/occam v0.13.3
