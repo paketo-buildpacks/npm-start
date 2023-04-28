@@ -1,7 +1,6 @@
 package npmstart_test
 
 import (
-	"encoding/json"
 	"errors"
 	"os"
 	"path/filepath"
@@ -21,8 +20,7 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 		workingDir string
 
-		projectPathParser *fakes.PathParser
-		reloader          *fakes.Reloader
+		reloader *fakes.Reloader
 
 		detect packit.DetectFunc
 	)
@@ -30,25 +28,20 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 	it.Before(func() {
 		workingDir = t.TempDir()
 		Expect(os.Mkdir(filepath.Join(workingDir, "custom"), os.ModePerm)).To(Succeed())
-
-		projectPathParser = &fakes.PathParser{}
-		projectPathParser.GetCall.Returns.ProjectPath = filepath.Join(workingDir, "custom")
+		t.Setenv("BP_NODE_PROJECT_PATH", "custom")
 
 		reloader = &fakes.Reloader{}
 
-		detect = npmstart.Detect(projectPathParser, reloader)
+		detect = npmstart.Detect(reloader)
 	})
 
 	context("when there is a package.json with a start script", func() {
 		it.Before(func() {
-			content := npmstart.PackageJson{Scripts: npmstart.PackageScripts{
-				Start: "node server.js",
-			}}
-
-			bytes, err := json.Marshal(content)
-			Expect(err).To(BeNil())
-
-			Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), bytes, 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), []byte(`{
+				"scripts": {
+					"start": "node server.js"
+				}
+			}`), 0600)).To(Succeed())
 		})
 
 		it("detects", func() {
@@ -78,7 +71,6 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 					},
 				},
 			}))
-			Expect(projectPathParser.GetCall.Receives.Path).To(Equal(filepath.Join(workingDir)))
 		})
 
 		context("when live reload is enabled", func() {
@@ -125,15 +117,12 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 
 	context("when there is a package.json without a start script", func() {
 		it.Before(func() {
-			content := npmstart.PackageJson{Scripts: npmstart.PackageScripts{
-				PreStart:  "npm run lint",
-				PostStart: "npm run test",
-			}}
-
-			bytes, err := json.Marshal(content)
-			Expect(err).To(BeNil())
-
-			Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), bytes, 0600)).To(Succeed())
+			Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), []byte(`{
+				"scripts": {
+					"prestart":  "npm run lint",
+					"poststart": "npm run test"
+				}
+			}`), 0600)).To(Succeed())
 		})
 
 		it.After(func() {
@@ -171,33 +160,30 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 				_, err := detect(packit.DetectContext{
 					WorkingDir: workingDir,
 				})
-				Expect(err).To(MatchError(ContainSubstring("failed to stat package.json:")))
+				Expect(err).To(MatchError(ContainSubstring("permission denied")))
 			})
 		})
 
 		context("when the project path cannot be found", func() {
 			it.Before(func() {
-				projectPathParser.GetCall.Returns.Err = errors.New("some-error")
+				t.Setenv("BP_NODE_PROJECT_PATH", "does-not-exist")
 			})
 
 			it("returns an error", func() {
 				_, err := detect(packit.DetectContext{
 					WorkingDir: workingDir,
 				})
-				Expect(err).To(MatchError("some-error"))
+				Expect(err).To(MatchError(ContainSubstring("could not find project path")))
 			})
 		})
 
 		context("the reloader returns an error", func() {
 			it.Before(func() {
-				content := npmstart.PackageJson{Scripts: npmstart.PackageScripts{
-					Start: "node server.js",
-				}}
-
-				bytes, err := json.Marshal(content)
-				Expect(err).To(BeNil())
-
-				Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), bytes, 0600)).To(Succeed())
+				Expect(os.WriteFile(filepath.Join(workingDir, "custom", "package.json"), []byte(`{
+					"scripts": {
+						"start":  "node server.js"
+					}
+				}`), 0600)).To(Succeed())
 
 				reloader.ShouldEnableLiveReloadCall.Returns.Error = errors.New("reloader error")
 			})

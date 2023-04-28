@@ -27,7 +27,6 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		workingDir string
 		cnbDir     string
 		buffer     *bytes.Buffer
-		pathParser *fakes.PathParser
 		reloader   *fakes.Reloader
 
 		startScript string
@@ -54,8 +53,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		buffer = bytes.NewBuffer(nil)
 		logger := scribe.NewEmitter(buffer)
 
-		pathParser = &fakes.PathParser{}
-		pathParser.GetCall.Returns.ProjectPath = filepath.Join(workingDir, "some-project-dir")
+		t.Setenv("BP_NODE_PROJECT_PATH", "some-project-dir")
 
 		reloader = &fakes.Reloader{}
 
@@ -75,7 +73,7 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Layers: packit.Layers{Path: layersDir},
 		}
 
-		build = npmstart.Build(pathParser, logger, reloader)
+		build = npmstart.Build(logger, reloader)
 	})
 
 	it("returns a result that builds correctly", func() {
@@ -146,7 +144,6 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(startScript).To(matchers.BeAFileWithSubstring("some-prestart-command && some-start-command && some-poststart-command"))
 
-			Expect(pathParser.GetCall.Receives.Path).To(Equal(workingDir))
 		})
 	})
 
@@ -218,8 +215,6 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 	context("when the project-path env var is not set", func() {
 		it.Before(func() {
-			pathParser.GetCall.Returns.ProjectPath = workingDir
-
 			startScript = fmt.Sprintf("%s/start.sh", workingDir)
 
 			err := os.WriteFile(filepath.Join(workingDir, "package.json"), []byte(`{
@@ -230,6 +225,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				}
 			}`), 0600)
 			Expect(err).NotTo(HaveOccurred())
+
+			t.Setenv("BP_NODE_PROJECT_PATH", "")
 		})
 
 		it.After(func() {

@@ -10,15 +10,13 @@ import (
 )
 
 func main() {
-	projectPathParser := npmstart.NewProjectPathParser()
 	logger := scribe.NewEmitter(os.Stdout).WithLevel(os.Getenv("BP_LOG_LEVEL"))
 
 	reloader := watchexec.NewWatchexecReloader()
 
 	packit.Run(
-		npmstart.Detect(projectPathParser, reloader),
+		npmstart.Detect(reloader),
 		npmstart.Build(
-			projectPathParser,
 			logger,
 			reloader,
 		),
