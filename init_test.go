@@ -11,7 +11,5 @@ func TestUnitNPMStart(t *testing.T) {
 	suite := spec.New("npm-start", spec.Report(report.Terminal{}), spec.Sequential())
 	suite("Build", testBuild)
 	suite("Detect", testDetect)
-	suite("ProjectPathParser", testProjectPathParser)
-	suite("PackageJsonParser", testPackageJsonParser)
 	suite.Run(t)
 }

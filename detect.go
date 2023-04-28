@@ -2,46 +2,35 @@ package npmstart
 
 import (
 	"fmt"
-	"path/filepath"
+	"os"
 
+	"github.com/paketo-buildpacks/libnodejs"
 	"github.com/paketo-buildpacks/libreload-packit"
 	"github.com/paketo-buildpacks/packit/v2"
-	"github.com/paketo-buildpacks/packit/v2/fs"
 )
 
 type Reloader libreload.Reloader
 
 //go:generate faux --interface Reloader --output fakes/reloader.go
 
-//go:generate faux --interface PathParser --output fakes/path_parser.go
-type PathParser interface {
-	Get(path string) (projectPath string, err error)
-}
-
 const NoStartScriptError = "no start script in package.json"
 
-func Detect(projectPathParser PathParser, reloader Reloader) packit.DetectFunc {
+func Detect(reloader Reloader) packit.DetectFunc {
 	return func(context packit.DetectContext) (packit.DetectResult, error) {
-		projectPath, err := projectPathParser.Get(context.WorkingDir)
+		projectPath, err := libnodejs.FindProjectPath(context.WorkingDir)
 		if err != nil {
 			return packit.DetectResult{}, err
 		}
 
-		exists, err := fs.Exists(filepath.Join(projectPath, "package.json"))
+		pkg, err := libnodejs.ParsePackageJSON(projectPath)
 		if err != nil {
-			return packit.DetectResult{}, fmt.Errorf("failed to stat package.json: %w", err)
+			if os.IsNotExist(err) {
+			        return packit.DetectResult{}, packit.Fail.WithMessage("no 'package.json' found in project path %s", projectPath)
+			}
+			return packit.DetectResult{}, fmt.Errorf("failed to open package.json: %w", err)
 		}
 
-		if !exists {
-			return packit.DetectResult{}, packit.Fail.WithMessage("no 'package.json' found in project path %s", projectPath)
-		}
-
-		var pkg *PackageJson
-		if pkg, err = NewPackageJsonFromPath(filepath.Join(projectPath, "package.json")); err != nil {
-			return packit.DetectResult{}, err
-		}
-
-		if !pkg.hasStartCommand() {
+		if !pkg.HasStartScript() {
 			return packit.DetectResult{}, packit.Fail.WithMessage(NoStartScriptError)
 		}
 

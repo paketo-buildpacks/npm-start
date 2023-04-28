@@ -5,23 +5,22 @@ import (
 	"os"
 	"path/filepath"
 
+	libnodejs "github.com/paketo-buildpacks/libnodejs"
 	"github.com/paketo-buildpacks/libreload-packit"
 	"github.com/paketo-buildpacks/packit/v2"
 	"github.com/paketo-buildpacks/packit/v2/scribe"
 )
 
-func Build(pathParser PathParser, logger scribe.Emitter, reloader Reloader) packit.BuildFunc {
+func Build(logger scribe.Emitter, reloader Reloader) packit.BuildFunc {
 	return func(context packit.BuildContext) (packit.BuildResult, error) {
 		logger.Title("%s %s", context.BuildpackInfo.Name, context.BuildpackInfo.Version)
 
-		projectPath, err := pathParser.Get(context.WorkingDir)
+		projectPath, err := libnodejs.FindProjectPath(context.WorkingDir)
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
 
-		var pkg *PackageJson
-
-		pkg, err = NewPackageJsonFromPath(filepath.Join(projectPath, "package.json"))
+		pkg, err := libnodejs.ParsePackageJSON(projectPath)
 		if err != nil {
 			return packit.BuildResult{}, err
 		}
@@ -39,6 +38,7 @@ func Build(pathParser PathParser, logger scribe.Emitter, reloader Reloader) pack
 
 		// Ideally we would like the lifecycle to support setting a custom working
 		// directory to run the launch process.  Until that happens we will cd in.
+
 		if projectPath != context.WorkingDir {
 			arg = fmt.Sprintf("cd %s && %s", projectPath, arg)
 		}
