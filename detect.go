@@ -33,7 +33,7 @@ func Detect(projectPathParser PathParser, reloader Reloader) packit.DetectFunc {
 		}
 
 		if !exists {
-			return packit.DetectResult{}, packit.Fail.WithMessage(`no "package.json" found in project path %s`, projectPath)
+			return packit.DetectResult{}, packit.Fail.WithMessage("no 'package.json' found in project path %s", projectPath)
 		}
 
 		var pkg *PackageJson
