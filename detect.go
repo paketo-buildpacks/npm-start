@@ -2,11 +2,11 @@ package npmstart
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 
 	"github.com/paketo-buildpacks/libreload-packit"
 	"github.com/paketo-buildpacks/packit/v2"
+	"github.com/paketo-buildpacks/packit/v2/fs"
 )
 
 type Reloader libreload.Reloader
@@ -27,12 +27,13 @@ func Detect(projectPathParser PathParser, reloader Reloader) packit.DetectFunc {
 			return packit.DetectResult{}, err
 		}
 
-		_, err = os.Stat(filepath.Join(projectPath, "package.json"))
+		exists, err := fs.Exists(filepath.Join(projectPath, "package.json"))
 		if err != nil {
-			if os.IsNotExist(err) {
-				return packit.DetectResult{}, packit.Fail
-			}
 			return packit.DetectResult{}, fmt.Errorf("failed to stat package.json: %w", err)
+		}
+
+		if !exists {
+			return packit.DetectResult{}, packit.Fail.WithMessage(`no "package.json" found in project path %s`, projectPath)
 		}
 
 		var pkg *PackageJson
