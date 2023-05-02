@@ -7,7 +7,7 @@ import (
 	"github.com/sclevine/spec/report"
 )
 
-func TestUnitGoBuild(t *testing.T) {
+func TestUnitNPMStart(t *testing.T) {
 	suite := spec.New("npm-start", spec.Report(report.Terminal{}), spec.Sequential())
 	suite("Build", testBuild)
 	suite("Detect", testDetect)
