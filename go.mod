@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/BurntSushi/toml v1.3.2
-	github.com/onsi/gomega v1.27.7
+	github.com/onsi/gomega v1.27.8
 	github.com/paketo-buildpacks/libnodejs v0.0.2
 	github.com/paketo-buildpacks/libreload-packit v0.0.1
 	github.com/paketo-buildpacks/occam v0.16.0
