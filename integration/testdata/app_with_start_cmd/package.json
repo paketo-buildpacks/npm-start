@@ -16,7 +16,8 @@
   "scripts": {
     "poststart": "echo \"poststart\"",
     "prestart": "echo \"prestart\"",
-    "start": "echo \"start\" && node server.js",
+    "start": "echo \"start\" && node hello.js",
+    "start:dev": "echo \"start:dev\" && node hello.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "version": "0.0.0"

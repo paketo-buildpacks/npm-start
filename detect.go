@@ -25,7 +25,7 @@ func Detect(reloader Reloader) packit.DetectFunc {
 		pkg, err := libnodejs.ParsePackageJSON(projectPath)
 		if err != nil {
 			if os.IsNotExist(err) {
-			        return packit.DetectResult{}, packit.Fail.WithMessage("no 'package.json' found in project path %s", projectPath)
+				return packit.DetectResult{}, packit.Fail.WithMessage("no 'package.json' found in project path %s", projectPath)
 			}
 			return packit.DetectResult{}, fmt.Errorf("failed to open package.json: %w", err)
 		}

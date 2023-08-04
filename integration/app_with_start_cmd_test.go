@@ -101,5 +101,51 @@ func testAppWithStartCmd(t *testing.T, context spec.G, it spec.S) {
 			Eventually(cLogs).Should(ContainSubstring("prestart"))
 			Eventually(cLogs).Should(ContainSubstring("start"))
 		})
+
+		it("builds a working OCI image and runs a custom start cmd", func() {
+			var err error
+			source, err = occam.Source(filepath.Join("testdata", "app_with_start_cmd"))
+			Expect(err).NotTo(HaveOccurred())
+
+			var logs fmt.Stringer
+			image, logs, err = pack.WithNoColor().Build.
+				WithBuildpacks(
+					settings.Buildpacks.NodeEngine.Online,
+					settings.Buildpacks.NPMInstall.Online,
+					settings.Buildpacks.NPMStart.Online,
+				).
+				WithEnv(map[string]string{"BP_NPM_START_SCRIPT": "start:dev"}).
+				WithPullPolicy("never").
+				Execute(name, source)
+			Expect(err).NotTo(HaveOccurred(), logs.String())
+
+			container, err = docker.Container.Run.
+				WithEnv(map[string]string{"PORT": "8080"}).
+				WithPublish("8080").
+				WithPublishAll().
+				Execute(image.ID)
+			Expect(err).NotTo(HaveOccurred())
+
+			Eventually(container).Should(BeAvailable())
+
+			response, err := http.Get(fmt.Sprintf("http://localhost:%s", container.HostPort("8080")))
+			Expect(err).NotTo(HaveOccurred())
+			defer response.Body.Close()
+
+			Expect(response.StatusCode).To(Equal(http.StatusOK))
+
+			content, err := io.ReadAll(response.Body)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(string(content)).To(ContainSubstring("hello world"))
+
+			cLogs := func() fmt.Stringer {
+				containerLogs, err := docker.Container.Logs.Execute(container.ID)
+				Expect(err).NotTo(HaveOccurred())
+				return containerLogs
+			}
+
+			Eventually(cLogs).Should(ContainSubstring("start:dev"))
+		})
+
 	})
 }
