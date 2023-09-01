@@ -5,7 +5,7 @@
   },
   "description": "some graceful app",
   "engines": {
-    "node": "~14"
+    "node": "~16"
   },
   "license": "",
   "name": "graceful_shutdown_app",
