@@ -22,11 +22,19 @@ func testProjectPath(t *testing.T, context spec.G, it spec.S) {
 
 		pack   occam.Pack
 		docker occam.Docker
+
+		pullPolicy       = "never"
+		extenderBuildStr = ""
 	)
 
 	it.Before(func() {
 		pack = occam.NewPack()
 		docker = occam.NewDocker()
+
+		if settings.Extensions.UbiNodejsExtension.Online != "" {
+			pullPolicy = "always"
+			extenderBuildStr = "[extender (build)] "
+		}
 	})
 
 	context("when building an app with a custom project path set", func() {
@@ -58,21 +66,25 @@ func testProjectPath(t *testing.T, context spec.G, it spec.S) {
 
 			var logs fmt.Stringer
 			image, logs, err = pack.WithNoColor().Build.
+				WithExtensions(
+					settings.Extensions.UbiNodejsExtension.Online,
+				).
 				WithBuildpacks(
 					settings.Buildpacks.NodeEngine.Online,
 					settings.Buildpacks.NPMInstall.Online,
 					settings.Buildpacks.NPMStart.Online,
 				).
-				WithPullPolicy("never").
+				WithPullPolicy(pullPolicy).
 				WithEnv(map[string]string{"BP_NODE_PROJECT_PATH": "server"}).
 				Execute(name, source)
 			Expect(err).NotTo(HaveOccurred(), logs.String())
 
 			Expect(logs).To(ContainLines(
-				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
-				"  Assigning launch processes:",
+				MatchRegexp(fmt.Sprintf(`%s%s \d+\.\d+\.\d+`, extenderBuildStr, settings.Buildpack.Name))))
+			Expect(logs).To(ContainLines(
+				extenderBuildStr+"  Assigning launch processes:",
 				ContainSubstring("web (default): sh /workspace/server/start.sh"),
-				"",
+				extenderBuildStr+"",
 			))
 
 			container, err = docker.Container.Run.
@@ -112,13 +124,16 @@ func testProjectPath(t *testing.T, context spec.G, it spec.S) {
 
 				var logs fmt.Stringer
 				image, logs, err = pack.WithNoColor().Build.
+					WithExtensions(
+						settings.Extensions.UbiNodejsExtension.Online,
+					).
 					WithBuildpacks(
 						settings.Buildpacks.Watchexec.Online,
 						settings.Buildpacks.NodeEngine.Online,
 						settings.Buildpacks.NPMInstall.Online,
 						settings.Buildpacks.NPMStart.Online,
 					).
-					WithPullPolicy("never").
+					WithPullPolicy(pullPolicy).
 					WithEnv(map[string]string{
 						"BP_NODE_PROJECT_PATH":   "server",
 						"BP_LIVE_RELOAD_ENABLED": "true",
@@ -127,11 +142,12 @@ func testProjectPath(t *testing.T, context spec.G, it spec.S) {
 				Expect(err).NotTo(HaveOccurred(), logs.String())
 
 				Expect(logs).To(ContainLines(
-					MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
-					"  Assigning launch processes:",
+					MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name))))
+				Expect(logs).To(ContainLines(
+					extenderBuildStr+"  Assigning launch processes:",
 					ContainSubstring("web (default): watchexec --restart --watch /workspace/server --ignore /workspace/server/package.json --ignore /workspace/server/package-lock.json --ignore /workspace/server/node_modules --shell none -- sh /workspace/server/start.sh"),
 					ContainSubstring("no-reload:     sh /workspace/server/start.sh"),
-					"",
+					extenderBuildStr+"",
 				))
 
 				container, err = docker.Container.Run.
