@@ -13,5 +13,10 @@ api = "0.7"
   include-files = ["bin/run", "bin/build", "bin/detect", "buildpack.toml"]
   pre-package = "./scripts/build.sh"
 
+  [[metadata.configurations]]
+    name = "BP_NPM_START_SCRIPT"
+    default = "start"
+    description = "configures the npm script to be started"
+
 [[stacks]]
   id = "*"
