@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strings"
 
 	libnodejs "github.com/paketo-buildpacks/libnodejs"
 	"github.com/paketo-buildpacks/libreload-packit"
@@ -41,6 +43,23 @@ func Build(logger scribe.Emitter, reloader Reloader) packit.BuildFunc {
 
 		if projectPath != context.WorkingDir {
 			arg = fmt.Sprintf("cd %s && %s", projectPath, arg)
+		}
+
+		// ubuntu uses dash as the default shell while ubi uses bash as the default shell
+		// The version of bash on the current ubi images does not work properly with the
+		// signal handling added in the script. Running with bash -c and escaping quotes in
+		// the command changes the behavior so that it matches that when running with dash
+		// This is fixed in more recent versions of bash ( 5.x and greater) but it will be some
+		// time before ubi (and ubuntu it seems) will use that new a version of bash.  This work
+		// around is needed until then.
+		etcOsReleaseFileContent, err := os.ReadFile(filepath.Join("/etc/os-release"))
+		if err == nil {
+			re := regexp.MustCompile(`ID=(rhel|"rhel")`)
+
+			match := re.FindStringSubmatch(string(etcOsReleaseFileContent))
+			if match != nil {
+				arg = fmt.Sprintf("bash -c \"%s\"", strings.Replace(arg, `"`, `\"`, -1))
+			}
 		}
 
 		script, err := createStartupScript(fmt.Sprintf(StartupScript, arg), projectPath, context.WorkingDir)

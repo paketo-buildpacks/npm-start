@@ -36,9 +36,16 @@ var settings struct {
 		Name string
 	}
 	Config struct {
-		NodeEngine string `json:"node-engine"`
-		NPMInstall string `json:"npm-install"`
-		Watchexec  string `json:"watchexec"`
+		NodeEngine         string `json:"node-engine"`
+		NPMInstall         string `json:"npm-install"`
+		Watchexec          string `json:"watchexec"`
+		UbiNodejsExtension string `json:"ubi-nodejs-extension"`
+	}
+
+	Extensions struct {
+		UbiNodejsExtension struct {
+			Online string
+		}
 	}
 }
 
@@ -63,6 +70,17 @@ func TestIntegration(t *testing.T) {
 	buildpackStore := occam.NewBuildpackStore()
 
 	libpakBuildpackStore := occam.NewBuildpackStore().WithPackager(packagers.NewLibpak())
+
+	pack := occam.NewPack()
+
+	builder, err := pack.Builder.Inspect.Execute()
+	Expect(err).NotTo(HaveOccurred())
+
+	if builder.BuilderName == "paketocommunity/builder-ubi-buildpackless-base" {
+		settings.Extensions.UbiNodejsExtension.Online, err = buildpackStore.Get.
+			Execute(settings.Config.UbiNodejsExtension)
+		Expect(err).ToNot(HaveOccurred())
+	}
 
 	settings.Buildpacks.NPMStart.Online, err = buildpackStore.Get.
 		WithVersion("1.2.3").

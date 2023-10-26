@@ -22,11 +22,19 @@ func testAppWithStartCmd(t *testing.T, context spec.G, it spec.S) {
 
 		pack   occam.Pack
 		docker occam.Docker
+
+		pullPolicy       = "never"
+		extenderBuildStr = ""
 	)
 
 	it.Before(func() {
 		pack = occam.NewPack()
 		docker = occam.NewDocker()
+
+		if settings.Extensions.UbiNodejsExtension.Online != "" {
+			pullPolicy = "always"
+			extenderBuildStr = "[extender (build)] "
+		}
 	})
 
 	context("when building a container image with pack", func() {
@@ -58,12 +66,15 @@ func testAppWithStartCmd(t *testing.T, context spec.G, it spec.S) {
 
 			var logs fmt.Stringer
 			image, logs, err = pack.WithNoColor().Build.
+				WithExtensions(
+					settings.Extensions.UbiNodejsExtension.Online,
+				).
 				WithBuildpacks(
 					settings.Buildpacks.NodeEngine.Online,
 					settings.Buildpacks.NPMInstall.Online,
 					settings.Buildpacks.NPMStart.Online,
 				).
-				WithPullPolicy("never").
+				WithPullPolicy(pullPolicy).
 				Execute(name, source)
 			Expect(err).NotTo(HaveOccurred(), logs.String())
 
@@ -87,8 +98,9 @@ func testAppWithStartCmd(t *testing.T, context spec.G, it spec.S) {
 			Expect(string(content)).To(ContainSubstring("hello world"))
 
 			Expect(logs).To(ContainLines(
-				MatchRegexp(fmt.Sprintf(`%s \d+\.\d+\.\d+`, settings.Buildpack.Name)),
-				"  Assigning launch processes:",
+				MatchRegexp(fmt.Sprintf(`%s%s \d+\.\d+\.\d+`, extenderBuildStr, settings.Buildpack.Name))))
+			Expect(logs).To(ContainLines(
+				extenderBuildStr+"  Assigning launch processes:",
 				ContainSubstring("web (default): sh /workspace/start.sh"),
 			))
 
@@ -109,13 +121,16 @@ func testAppWithStartCmd(t *testing.T, context spec.G, it spec.S) {
 
 			var logs fmt.Stringer
 			image, logs, err = pack.WithNoColor().Build.
+				WithExtensions(
+					settings.Extensions.UbiNodejsExtension.Online,
+				).
 				WithBuildpacks(
 					settings.Buildpacks.NodeEngine.Online,
 					settings.Buildpacks.NPMInstall.Online,
 					settings.Buildpacks.NPMStart.Online,
 				).
 				WithEnv(map[string]string{"BP_NPM_START_SCRIPT": "start:dev"}).
-				WithPullPolicy("never").
+				WithPullPolicy(pullPolicy).
 				Execute(name, source)
 			Expect(err).NotTo(HaveOccurred(), logs.String())
 

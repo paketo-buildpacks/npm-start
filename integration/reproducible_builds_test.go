@@ -17,11 +17,17 @@ func testReproducibleBuilds(t *testing.T, context spec.G, it spec.S) {
 
 		pack   occam.Pack
 		docker occam.Docker
+
+		pullPolicy = "never"
 	)
 
 	it.Before(func() {
 		pack = occam.NewPack()
 		docker = occam.NewDocker()
+
+		if settings.Extensions.UbiNodejsExtension.Online != "" {
+			pullPolicy = "always"
+		}
 	})
 
 	context("when rebuilding an image with pack", func() {
@@ -49,12 +55,15 @@ func testReproducibleBuilds(t *testing.T, context spec.G, it spec.S) {
 
 		it("creates an identical image from identical inputs", func() {
 			build := pack.WithNoColor().Build.
+				WithExtensions(
+					settings.Extensions.UbiNodejsExtension.Online,
+				).
 				WithBuildpacks(
 					settings.Buildpacks.NodeEngine.Online,
 					settings.Buildpacks.NPMInstall.Online,
 					settings.Buildpacks.NPMStart.Online,
 				).
-				WithPullPolicy("never")
+				WithPullPolicy(pullPolicy)
 
 			var err error
 			image, _, err = build.Execute(name, source)
