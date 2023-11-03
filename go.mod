@@ -18,7 +18,7 @@ require (
 	github.com/ForestEckhardt/freezer v0.0.12 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.1 // indirect
-	github.com/Microsoft/hcsshim v0.11.2 // indirect
+	github.com/Microsoft/hcsshim v0.11.4 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/containerd/containerd v1.7.8 // indirect
 	github.com/containerd/log v0.1.0 // indirect
