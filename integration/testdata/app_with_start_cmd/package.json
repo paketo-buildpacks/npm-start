@@ -5,7 +5,7 @@
   },
   "description": "some app",
   "engines": {
-    "node": "~16"
+    "node": "~18"
   },
   "license": "",
   "name": "simple_app",
