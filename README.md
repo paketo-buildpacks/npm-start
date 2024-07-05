@@ -60,7 +60,7 @@ This could be useful if your app is a part of a monorepo.
 
 To specify a start script to be used instead of `start`, please use
 the `BP_NPM_START_SCRIPT` environment variable at build time either directly
-(e.g. `pack build my-app --env BP_NODE_PROJECT_PATH=./src/my-app`) or through a
+(e.g. `pack build my-app --env BP_NPM_START_SCRIPT=myscript`) or through a
 [`project.toml`
 file](https://github.com/buildpacks/spec/blob/main/extensions/project-descriptor.md).
 
