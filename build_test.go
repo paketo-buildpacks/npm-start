@@ -255,7 +255,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Expect(startScript).To(matchers.BeAFileWithSubstring("some-prestart-command && some-start-command && some-poststart-command"))
 		})
 
-		context("when the project-path env var is not set", func() {
+		context("when BP_NMP_START_SCRIPT is used", func() {
+```
 			it.Before(func() {
 				t.Setenv("BP_NPM_START_SCRIPT", "random-script")
 			})
