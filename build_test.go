@@ -256,7 +256,6 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		})
 
 		context("when BP_NMP_START_SCRIPT is used", func() {
-```
 			it.Before(func() {
 				t.Setenv("BP_NPM_START_SCRIPT", "random-script")
 			})
