@@ -8,7 +8,7 @@ require (
 	github.com/paketo-buildpacks/libnodejs v0.3.0
 	github.com/paketo-buildpacks/libreload-packit v0.0.1
 	github.com/paketo-buildpacks/occam v0.18.8
-	github.com/paketo-buildpacks/packit/v2 v2.14.2
+	github.com/paketo-buildpacks/packit/v2 v2.15.0
 	github.com/sclevine/spec v1.4.0
 )
 
