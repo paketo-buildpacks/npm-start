@@ -28,7 +28,7 @@ func Build(logger scribe.Emitter, reloader Reloader) packit.BuildFunc {
 		}
 
 		command := "sh"
-		arg := pkg.Scripts.Start
+		arg := fmt.Sprintf("%s $@", pkg.Scripts.Start)
 
 		if pkg.Scripts.PreStart != "" {
 			arg = fmt.Sprintf("%s && %s", pkg.Scripts.PreStart, arg)
