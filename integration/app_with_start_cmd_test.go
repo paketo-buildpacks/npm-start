@@ -162,7 +162,7 @@ func testAppWithStartCmd(t *testing.T, context spec.G, it spec.S) {
 			Eventually(cLogs).Should(ContainSubstring("start:dev"))
 		})
 
-		it("builds a working OCI image and runs a start cmdw ith arg", func() {
+it("builds a working OCI image and runs a start cmd with arg", func() {
 			var err error
 			source, err = occam.Source(filepath.Join("testdata", "app_with_start_cmd"))
 			Expect(err).NotTo(HaveOccurred())
