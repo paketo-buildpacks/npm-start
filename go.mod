@@ -3,7 +3,7 @@ module github.com/paketo-buildpacks/npm-start
 go 1.24.1
 
 require (
-	github.com/BurntSushi/toml v1.4.0
+	github.com/BurntSushi/toml v1.5.0
 	github.com/onsi/gomega v1.36.2
 	github.com/paketo-buildpacks/libnodejs v0.4.0
 	github.com/paketo-buildpacks/libreload-packit v0.0.1
