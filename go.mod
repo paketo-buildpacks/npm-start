@@ -4,7 +4,7 @@ go 1.24.1
 
 require (
 	github.com/BurntSushi/toml v1.5.0
-	github.com/onsi/gomega v1.36.2
+	github.com/onsi/gomega v1.36.3
 	github.com/paketo-buildpacks/libnodejs v0.4.0
 	github.com/paketo-buildpacks/libreload-packit v0.0.1
 	github.com/paketo-buildpacks/occam v0.23.0
@@ -79,6 +79,5 @@ require (
 	google.golang.org/genproto/googleapis/api v0.0.0-20250106144421-5f5ef82da422 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20250115164207-1a7da9e5054f // indirect
 	google.golang.org/grpc v1.71.0 // indirect
-	google.golang.org/protobuf v1.36.5 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
