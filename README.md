@@ -1,6 +1,6 @@
 # Paketo Buildpack for NPM Start
 
-## `gcr.io/paketo-buildpacks/npm-start`
+## `docker.io/paketobuildpacks/npm-start`
 
 The NPM Start CNB sets the start command for the given application. The start
 command is generated from the contents of `package.json`. For example, given a
