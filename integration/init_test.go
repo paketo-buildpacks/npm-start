@@ -69,7 +69,7 @@ func TestIntegration(t *testing.T) {
 
 	buildpackStore := occam.NewBuildpackStore()
 
-	libpakBuildpackStore := occam.NewBuildpackStore().WithPackager(packagers.NewLibpak())
+	libpakBuildpackStore := occam.NewBuildpackStore().WithPackager(packagers.NewLibpakTools())
 
 	pack := occam.NewPack()
 
