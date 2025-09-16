@@ -1,11 +1,11 @@
 module github.com/paketo-buildpacks/npm-start
 
-go 1.24.6
+go 1.24.7
 
 require (
 	github.com/BurntSushi/toml v1.5.0
 	github.com/onsi/gomega v1.38.2
-	github.com/paketo-buildpacks/libnodejs v0.4.0
+	github.com/paketo-buildpacks/libnodejs v0.4.1
 	github.com/paketo-buildpacks/libreload-packit v0.0.1
 	github.com/paketo-buildpacks/occam v0.30.0
 	github.com/paketo-buildpacks/packit/v2 v2.25.0
@@ -68,7 +68,7 @@ require (
 	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/vbatts/tar-split v0.12.1 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
-	go.opentelemetry.io/auto/sdk v1.2.0 // indirect
+	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.63.0 // indirect
 	go.opentelemetry.io/otel v1.38.0 // indirect
 	go.opentelemetry.io/otel/metric v1.38.0 // indirect
