@@ -116,8 +116,8 @@ github.com/opencontainers/image-spec v1.1.1 h1:y0fUlFfIZhPF1W537XOLg0/fcx6zcHCJw
 github.com/opencontainers/image-spec v1.1.1/go.mod h1:qpqAh3Dmcf36wStyyWU+kCeDgrGnAve2nCC8+7h8Q0M=
 github.com/paketo-buildpacks/freezer v0.2.2 h1:p0qcGMQ54uGMzDFNkfpDpxddNl8+OTqt3teAWIkmCu4=
 github.com/paketo-buildpacks/freezer v0.2.2/go.mod h1:8dkcCqZKYFKxDV4MuooIR/Fr/LmpXqpr8R9mFvkGerE=
-github.com/paketo-buildpacks/libnodejs v0.4.1 h1:0IIrS7oImiYIEn58QUqDUe0hunRZijfqMbKYTxKVeEw=
-github.com/paketo-buildpacks/libnodejs v0.4.1/go.mod h1:Rk9MiE0ECQugU93o9g42rixUQhsbTlZo5YTKjyB+FW4=
+github.com/paketo-buildpacks/libnodejs v0.4.2 h1:SN5KTS2vKiZ92mE62h2/+ll4tUgzA8UZGOA7v2kaFQQ=
+github.com/paketo-buildpacks/libnodejs v0.4.2/go.mod h1:ebD4iD4Jq8CX/Osva+RTBZhOnxfJe1sH+33sr5v1DEY=
 github.com/paketo-buildpacks/libreload-packit v0.0.1 h1:K1HhNAqBSzRpefwGOcvdchZwyeNTgNJL9SC7V4paYt8=
 github.com/paketo-buildpacks/libreload-packit v0.0.1/go.mod h1:ZWE3U94Z18yJk8Pc1mP852l9phQsrsZ+An2U98g0rWw=
 github.com/paketo-buildpacks/occam v0.31.0 h1:OyKSqhFAT5gJB1wFENzl+LK0NSHG0/HBADIzP9lacvA=
