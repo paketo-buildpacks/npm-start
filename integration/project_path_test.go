@@ -98,7 +98,9 @@ func testProjectPath(t *testing.T, context spec.G, it spec.S) {
 
 			response, err := http.Get(fmt.Sprintf("http://localhost:%s", container.HostPort("8080")))
 			Expect(err).NotTo(HaveOccurred())
-			defer response.Body.Close()
+			defer func() {
+				Expect(response.Body.Close()).To(Succeed())
+			}()
 
 			Expect(response.StatusCode).To(Equal(http.StatusOK))
 
@@ -161,7 +163,9 @@ func testProjectPath(t *testing.T, context spec.G, it spec.S) {
 
 				response, err := http.Get(fmt.Sprintf("http://localhost:%s", container.HostPort("8080")))
 				Expect(err).NotTo(HaveOccurred())
-				defer response.Body.Close()
+				defer func() {
+					Expect(response.Body.Close()).To(Succeed())
+				}()
 
 				Expect(response.StatusCode).To(Equal(http.StatusOK))
 

@@ -52,16 +52,15 @@ var settings struct {
 func TestIntegration(t *testing.T) {
 	Expect := NewWithT(t).Expect
 
-	file, err := os.Open("../integration.json")
+	integrationFile, err := os.Open("../integration.json")
 	Expect(err).NotTo(HaveOccurred())
-	defer file.Close()
-
-	Expect(json.NewDecoder(file).Decode(&settings.Config)).To(Succeed())
-
-	file, err = os.Open("../buildpack.toml")
+	err = json.NewDecoder(integrationFile).Decode(&settings.Config)
 	Expect(err).NotTo(HaveOccurred())
+	Expect(integrationFile.Close()).To(Succeed())
 
-	_, err = toml.NewDecoder(file).Decode(&settings.Buildpack)
+	buildpackFile, err := os.Open("../buildpack.toml")
+	Expect(err).NotTo(HaveOccurred())
+	_, err = toml.NewDecoder(buildpackFile).Decode(&settings.Buildpack)
 	Expect(err).NotTo(HaveOccurred())
 
 	root, err := filepath.Abs("./..")
