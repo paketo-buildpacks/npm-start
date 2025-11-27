@@ -45,20 +45,21 @@ func Build(logger scribe.Emitter, reloader Reloader) packit.BuildFunc {
 			arg = fmt.Sprintf("cd %s && %s", projectPath, arg)
 		}
 
-		// ubuntu uses dash as the default shell while ubi uses bash as the default shell
-		// The version of bash on the current ubi images does not work properly with the
-		// signal handling added in the script. Running with bash -c and escaping quotes in
-		// the command changes the behavior so that it matches that when running with dash
-		// This is fixed in more recent versions of bash ( 5.x and greater) but it will be some
-		// time before ubi (and ubuntu it seems) will use that new a version of bash.  This work
-		// around is needed until then.
+		/*
+			Ubuntu uses Dash as the default shell, while UBI uses Bash.
+			The version of Bash on the current UBI images does not properly handle
+			the signal handling logic added in the script. Running the command using bash -c
+			and escaping the quotes changes the behavior to match that of of running with Dash.
+			This issue is fixed in more recent versions of Bash (>=5.x), however until UBI and Ubuntu
+			begin using this version, the following workaround is necesary.
+		*/
 		etcOsReleaseFileContent, err := os.ReadFile(filepath.Join("/etc/os-release"))
 		if err == nil {
 			re := regexp.MustCompile(`ID=(rhel|"rhel")`)
 
 			match := re.FindStringSubmatch(string(etcOsReleaseFileContent))
 			if match != nil {
-				arg = fmt.Sprintf("bash -c \"%s\"", strings.Replace(arg, `"`, `\"`, -1))
+				arg = fmt.Sprintf("bash -c \"%s\"", strings.ReplaceAll(arg, `"`, `\"`))
 			}
 		}
 
