@@ -7,7 +7,7 @@ require (
 	github.com/onsi/gomega v1.38.3
 	github.com/paketo-buildpacks/libnodejs v0.4.3
 	github.com/paketo-buildpacks/libreload-packit v0.0.1
-	github.com/paketo-buildpacks/occam v0.31.0
+	github.com/paketo-buildpacks/occam v0.31.1
 	github.com/paketo-buildpacks/packit/v2 v2.25.3
 	github.com/sclevine/spec v1.4.0
 )
