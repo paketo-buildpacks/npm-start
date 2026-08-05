@@ -6,7 +6,6 @@
     "poststart": "echo \"poststart\"",
     "prestart": "echo \"prestart\"",
     "start": "echo \"start\" && node server.js",
-    "start:node": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "",

@@ -105,3 +105,5 @@ When tini is enabled:
   tini runs a single command without a shell.
 - Shell syntax in `scripts.start` (for example `&&`, pipes, or quotes) is not
   interpreted; the value is split on whitespace only.
+- `BP_NODE_PROJECT_PATH` is not supported with tini and will cause the build to
+  fail.

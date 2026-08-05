@@ -35,6 +35,10 @@ func Build(logger scribe.Emitter, reloader Reloader) packit.BuildFunc {
 		}
 
 		if shouldLaunchWithTini {
+			if projectPath != context.WorkingDir {
+				return packit.BuildResult{}, fmt.Errorf("BP_LAUNCH_WITH_TINI does not support yet being used with BP_NODE_PROJECT_PATH")
+			}
+
 			startParts := strings.Fields(pkg.Scripts.Start)
 			if len(startParts) == 0 {
 				return packit.BuildResult{}, fmt.Errorf("failed to parse start script %q", pkg.Scripts.Start)
@@ -46,9 +50,6 @@ func Build(logger scribe.Emitter, reloader Reloader) packit.BuildFunc {
 				Args:    append([]string{"-g", "--"}, startParts...),
 				Default: true,
 				Direct:  true,
-			}
-			if projectPath != context.WorkingDir {
-				originalProcess.WorkingDirectory = projectPath
 			}
 
 			logger.Process("Using tini for process launching")

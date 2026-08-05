@@ -104,7 +104,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 	context("when BP_LAUNCH_WITH_TINI is true", func() {
 		it.Before(func() {
 			t.Setenv("BP_LAUNCH_WITH_TINI", "true")
-			err := os.WriteFile(filepath.Join(workingDir, "some-project-dir", "package.json"), []byte(`{
+			t.Setenv("BP_NODE_PROJECT_PATH", "")
+			err := os.WriteFile(filepath.Join(workingDir, "package.json"), []byte(`{
 				"scripts": {
 					"start": "node server.js"
 				}
@@ -117,21 +118,20 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 
 			Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
-				Type:             "web",
-				Command:          "tini",
-				Default:          true,
-				Direct:           true,
-				WorkingDirectory: filepath.Join(workingDir, "some-project-dir"),
-				Args:             []string{"-g", "--", "node", "server.js"},
+				Type:    "web",
+				Command: "tini",
+				Default: true,
+				Direct:  true,
+				Args:    []string{"-g", "--", "node", "server.js"},
 			}))
 
-			Expect(startScript).NotTo(BeAnExistingFile())
+			Expect(filepath.Join(workingDir, "start.sh")).NotTo(BeAnExistingFile())
 			Expect(buffer.String()).To(ContainSubstring("Using tini for process launching"))
 		})
 
 		context("when prestart or poststart scripts are present", func() {
 			it.Before(func() {
-				err := os.WriteFile(filepath.Join(workingDir, "some-project-dir", "package.json"), []byte(`{
+				err := os.WriteFile(filepath.Join(workingDir, "package.json"), []byte(`{
 					"scripts": {
 						"prestart": "some-prestart-command",
 						"start": "node server.js",
@@ -146,15 +146,31 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
-					Type:             "web",
-					Command:          "tini",
-					Default:          true,
-					Direct:           true,
-					WorkingDirectory: filepath.Join(workingDir, "some-project-dir"),
-					Args:             []string{"-g", "--", "node", "server.js"},
+					Type:    "web",
+					Command: "tini",
+					Default: true,
+					Direct:  true,
+					Args:    []string{"-g", "--", "node", "server.js"},
 				}))
 
 				Expect(buffer.String()).To(ContainSubstring("Warning: skipping prestart and/or poststart scripts because BP_LAUNCH_WITH_TINI is enabled"))
+			})
+		})
+
+		context("when BP_NODE_PROJECT_PATH is set", func() {
+			it.Before(func() {
+				t.Setenv("BP_NODE_PROJECT_PATH", "some-project-dir")
+				err := os.WriteFile(filepath.Join(workingDir, "some-project-dir", "package.json"), []byte(`{
+					"scripts": {
+						"start": "node server.js"
+					}
+				}`), 0600)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			it("returns an error", func() {
+				_, err := build(buildContext)
+				Expect(err).To(MatchError(ContainSubstring("BP_LAUNCH_WITH_TINI does not support yet being used with BP_NODE_PROJECT_PATH")))
 			})
 		})
 	})
@@ -219,7 +235,8 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		context("when BP_LAUNCH_WITH_TINI is also true", func() {
 			it.Before(func() {
 				t.Setenv("BP_LAUNCH_WITH_TINI", "true")
-				err := os.WriteFile(filepath.Join(workingDir, "some-project-dir", "package.json"), []byte(`{
+				t.Setenv("BP_NODE_PROJECT_PATH", "")
+				err := os.WriteFile(filepath.Join(workingDir, "package.json"), []byte(`{
 					"scripts": {
 						"start": "node server.js"
 					}
@@ -232,12 +249,11 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 				Expect(err).NotTo(HaveOccurred())
 
 				Expect(reloader.TransformReloadableProcessesCall.Receives.OriginalProcess).To(Equal(packit.Process{
-					Type:             "web",
-					Command:          "tini",
-					Args:             []string{"-g", "--", "node", "server.js"},
-					Default:          true,
-					Direct:           true,
-					WorkingDirectory: filepath.Join(workingDir, "some-project-dir"),
+					Type:    "web",
+					Command: "tini",
+					Args:    []string{"-g", "--", "node", "server.js"},
+					Default: true,
+					Direct:  true,
 				}))
 
 				Expect(result.Launch.Processes).To(ConsistOf(packit.Process{

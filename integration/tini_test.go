@@ -113,59 +113,5 @@ func testTini(t *testing.T, context spec.G, it spec.S) {
 			Expect(err).NotTo(HaveOccurred())
 			Expect(string(content)).To(ContainSubstring("hello world"))
 		})
-
-		it("uses tini with a custom project path", func() {
-			var err error
-			source, err = occam.Source(filepath.Join("testdata", "project_path_app"))
-			Expect(err).NotTo(HaveOccurred())
-
-			var logs fmt.Stringer
-			image, logs, err = pack.WithNoColor().Build.
-				WithExtensions(
-					settings.Extensions.UbiNodejsExtension.Online,
-				).
-				WithBuildpacks(
-					settings.Buildpacks.NodeEngine.Online,
-					settings.Buildpacks.NPMInstall.Online,
-					settings.Buildpacks.Tini.Online,
-					settings.Buildpacks.NPMStart.Online,
-				).
-				WithEnv(map[string]string{
-					"BP_LAUNCH_WITH_TINI":  "true",
-					"BP_NODE_PROJECT_PATH": "server",
-					"BP_NPM_START_SCRIPT":  "start:node",
-				}).
-				WithPullPolicy(pullPolicy).
-				Execute(name, source)
-			Expect(err).NotTo(HaveOccurred(), logs.String())
-
-			Expect(logs).To(ContainLines(
-				extenderBuildStr+"  Using tini for process launching",
-				extenderBuildStr+"    Warning: skipping prestart and/or poststart scripts because BP_LAUNCH_WITH_TINI is enabled",
-				extenderBuildStr+"  Assigning launch processes:",
-				extenderBuildStr+"    web (default): tini -g -- node server.js",
-			))
-
-			container, err = docker.Container.Run.
-				WithEnv(map[string]string{"PORT": "8080"}).
-				WithPublish("8080").
-				WithPublishAll().
-				Execute(image.ID)
-			Expect(err).NotTo(HaveOccurred())
-
-			Eventually(container).Should(BeAvailable())
-
-			response, err := http.Get(fmt.Sprintf("http://localhost:%s", container.HostPort("8080")))
-			Expect(err).NotTo(HaveOccurred())
-			defer func() {
-				Expect(response.Body.Close()).To(Succeed())
-			}()
-
-			Expect(response.StatusCode).To(Equal(http.StatusOK))
-
-			content, err := io.ReadAll(response.Body)
-			Expect(err).NotTo(HaveOccurred())
-			Expect(string(content)).To(ContainSubstring("hello world"))
-		})
 	})
 }
