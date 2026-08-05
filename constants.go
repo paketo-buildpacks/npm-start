@@ -4,6 +4,7 @@ const (
 	Node        = "node"
 	NodeModules = "node_modules"
 	Npm         = "npm"
+	Tini        = "tini"
 )
 
 const StartupScript = `trap 'kill -TERM $CPID' TERM
