@@ -28,15 +28,7 @@ func Build(logger scribe.Emitter, reloader Reloader) packit.BuildFunc {
 		}
 
 		command := "sh"
-		arg := fmt.Sprintf("%s $@", pkg.Scripts.Start)
-
-		if pkg.Scripts.PreStart != "" {
-			arg = fmt.Sprintf("%s && %s", pkg.Scripts.PreStart, arg)
-		}
-
-		if pkg.Scripts.PostStart != "" {
-			arg = fmt.Sprintf("%s && %s", arg, pkg.Scripts.PostStart)
-		}
+		arg := concatenateNpmScripts(pkg)
 
 		// Ideally we would like the lifecycle to support setting a custom working
 		// directory to run the launch process.  Until that happens we will cd in.
@@ -122,4 +114,18 @@ func createStartupScript(script, projectPath, workingDir string) (string, error)
 	}
 
 	return path, nil
+}
+
+func concatenateNpmScripts(pkg libnodejs.PackageJSON) string {
+	arg := fmt.Sprintf("%s $@", pkg.Scripts.Start)
+
+	if pkg.Scripts.PreStart != "" {
+		arg = fmt.Sprintf("%s && %s", pkg.Scripts.PreStart, arg)
+	}
+
+	if pkg.Scripts.PostStart != "" {
+		arg = fmt.Sprintf("%s && %s", arg, pkg.Scripts.PostStart)
+	}
+
+	return arg
 }
