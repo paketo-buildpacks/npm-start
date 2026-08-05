@@ -95,9 +95,95 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 		}))
 
 		Expect(startScript).To(matchers.BeAFileWithSubstring("some-prestart-command && some-start-command $@ && some-poststart-command"))
+		Expect(startScript).To(matchers.BeAFileWithSubstring("trap 'kill -TERM $CPID' TERM"))
 
 		Expect(buffer.String()).To(ContainSubstring("Some Buildpack some-version"))
 		Expect(buffer.String()).To(ContainSubstring("Assigning launch processes:"))
+	})
+
+	context("when BP_LAUNCH_WITH_TINI is true", func() {
+		it.Before(func() {
+			t.Setenv("BP_LAUNCH_WITH_TINI", "true")
+			t.Setenv("BP_NODE_PROJECT_PATH", "")
+			err := os.WriteFile(filepath.Join(workingDir, "package.json"), []byte(`{
+				"scripts": {
+					"start": "node server.js"
+				}
+			}`), 0600)
+			Expect(err).NotTo(HaveOccurred())
+		})
+
+		it("uses tini with the start script contents", func() {
+			result, err := build(buildContext)
+			Expect(err).NotTo(HaveOccurred())
+
+			Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
+				Type:    "web",
+				Command: "tini",
+				Default: true,
+				Direct:  true,
+				Args:    []string{"-g", "--", "node", "server.js"},
+			}))
+
+			Expect(filepath.Join(workingDir, "start.sh")).NotTo(BeAnExistingFile())
+			Expect(buffer.String()).To(ContainSubstring("Using tini for process launching"))
+		})
+
+		context("when prestart or poststart scripts are present", func() {
+			it.Before(func() {
+				err := os.WriteFile(filepath.Join(workingDir, "package.json"), []byte(`{
+					"scripts": {
+						"prestart": "some-prestart-command",
+						"start": "node server.js",
+						"poststart": "some-poststart-command"
+					}
+				}`), 0600)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			it("warns and skips prestart and poststart", func() {
+				result, err := build(buildContext)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
+					Type:    "web",
+					Command: "tini",
+					Default: true,
+					Direct:  true,
+					Args:    []string{"-g", "--", "node", "server.js"},
+				}))
+
+				Expect(buffer.String()).To(ContainSubstring("Warning: skipping prestart and/or poststart scripts because BP_LAUNCH_WITH_TINI is enabled"))
+			})
+		})
+
+		context("when BP_NODE_PROJECT_PATH is set", func() {
+			it.Before(func() {
+				t.Setenv("BP_NODE_PROJECT_PATH", "some-project-dir")
+				err := os.WriteFile(filepath.Join(workingDir, "some-project-dir", "package.json"), []byte(`{
+					"scripts": {
+						"start": "node server.js"
+					}
+				}`), 0600)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			it("returns an error", func() {
+				_, err := build(buildContext)
+				Expect(err).To(MatchError(ContainSubstring("BP_LAUNCH_WITH_TINI does not support yet being used with BP_NODE_PROJECT_PATH")))
+			})
+		})
+	})
+
+	context("when BP_LAUNCH_WITH_TINI is malformed", func() {
+		it.Before(func() {
+			t.Setenv("BP_LAUNCH_WITH_TINI", "not-a-bool")
+		})
+
+		it("returns an error", func() {
+			_, err := build(buildContext)
+			Expect(err).To(MatchError(ContainSubstring("failed to parse BP_LAUNCH_WITH_TINI value not-a-bool")))
+		})
 	})
 
 	context("when live reload is enabled", func() {
@@ -144,6 +230,42 @@ func testBuild(t *testing.T, context spec.G, it spec.S) {
 
 			Expect(startScript).To(matchers.BeAFileWithSubstring("some-prestart-command && some-start-command $@ && some-poststart-command"))
 
+		})
+
+		context("when BP_LAUNCH_WITH_TINI is also true", func() {
+			it.Before(func() {
+				t.Setenv("BP_LAUNCH_WITH_TINI", "true")
+				t.Setenv("BP_NODE_PROJECT_PATH", "")
+				err := os.WriteFile(filepath.Join(workingDir, "package.json"), []byte(`{
+					"scripts": {
+						"start": "node server.js"
+					}
+				}`), 0600)
+				Expect(err).NotTo(HaveOccurred())
+			})
+
+			it("wraps the tini process with watchexec", func() {
+				result, err := build(buildContext)
+				Expect(err).NotTo(HaveOccurred())
+
+				Expect(reloader.TransformReloadableProcessesCall.Receives.OriginalProcess).To(Equal(packit.Process{
+					Type:    "web",
+					Command: "tini",
+					Args:    []string{"-g", "--", "node", "server.js"},
+					Default: true,
+					Direct:  true,
+				}))
+
+				Expect(result.Launch.Processes).To(ConsistOf(packit.Process{
+					Type:    "web",
+					Command: "Reloadable",
+				}, packit.Process{
+					Type:    "no-reload",
+					Command: "NonReloadable",
+				}))
+
+				Expect(buffer.String()).To(ContainSubstring("Using tini for process launching"))
+			})
 		})
 	})
 

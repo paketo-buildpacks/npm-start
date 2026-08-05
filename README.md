@@ -42,6 +42,7 @@ $ ./scripts/package.sh --version <version-number>
 
 This will create a `buildpackage.cnb` file under the `build` directory which you
 can use to build your app as follows:
+
 ```
 pack build <app-name> -p <path-to-app> -b <path/to/node-engine.cnb> -b \
 <path/to/npm-install.cnb> -b build/buildpackage.cnb
@@ -67,11 +68,13 @@ file](https://github.com/buildpacks/spec/blob/main/extensions/project-descriptor
 ## Run Tests
 
 To run all unit tests, run:
+
 ```
 ./scripts/unit.sh
 ```
 
 To run all integration tests, run:
+
 ```
 /scripts/integration.sh
 ```
@@ -82,6 +85,25 @@ You can add signal handlers in your app to support graceful shutdown and
 program interrupts. If running a node server is the start command, the
 buildpack runs the node server as the init process, and thus it ignores any
 signal with the default action. As a result, the process will not terminate on
-`SIGINT` or `SIGTERM` unless it is coded to do so. You can also use docker's
-`--init` flag to wrap your node process with an init system that will properly
-handle signals.
+`SIGINT` or `SIGTERM` unless it is coded to do so.
+
+By default, this buildpack writes a small startup script that forwards
+signals to the application process.
+
+You can also use [tini](https://github.com/krallin/tini) for signal forwarding
+by setting `BP_LAUNCH_WITH_TINI=true` at build time. The tini buildpack must be
+available in the builder order before this buildpack, otherwise detection
+fails. This is useful for tiny run images that have no shell, and therefore no
+shell-based signal forwarding.
+
+When tini is enabled:
+
+- The launch process is `tini -g -- <start-args>`, where `<start-args>` is the
+  `scripts.start` value from `package.json` split on whitespace. For example,
+  `"start": "node server.js"` becomes `tini -g -- node server.js`.
+- `prestart` and `poststart` are skipped (with a build-time warning), because
+  tini runs a single command without a shell.
+- Shell syntax in `scripts.start` (for example `&&`, pipes, or quotes) is not
+  interpreted; the value is split on whitespace only.
+- `BP_NODE_PROJECT_PATH` is not supported with tini and will cause the build to
+  fail.

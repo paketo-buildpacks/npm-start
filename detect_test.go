@@ -113,6 +113,41 @@ func testDetect(t *testing.T, context spec.G, it spec.S) {
 				}))
 			})
 		})
+
+		context("when BP_LAUNCH_WITH_TINI is true", func() {
+			it.Before(func() {
+				t.Setenv("BP_LAUNCH_WITH_TINI", "true")
+			})
+
+			it("requires tini at launch and omits npm", func() {
+				result, err := detect(packit.DetectContext{
+					WorkingDir: workingDir,
+				})
+				Expect(err).NotTo(HaveOccurred())
+				Expect(result.Plan).To(Equal(packit.BuildPlan{
+					Requires: []packit.BuildPlanRequirement{
+						{
+							Name: "node",
+							Metadata: map[string]interface{}{
+								"launch": true,
+							},
+						},
+						{
+							Name: "tini",
+							Metadata: map[string]interface{}{
+								"launch": true,
+							},
+						},
+						{
+							Name: "node_modules",
+							Metadata: map[string]interface{}{
+								"launch": true,
+							},
+						},
+					},
+				}))
+			})
+		})
 	})
 
 	context("when there is a package.json without a start script", func() {

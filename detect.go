@@ -34,6 +34,11 @@ func Detect(reloader Reloader) packit.DetectFunc {
 			return packit.DetectResult{}, packit.Fail.WithMessage(NoStartScriptError)
 		}
 
+		shouldLaunchWithTini, err := libnodejs.ShouldLaunchWithTini()
+		if err != nil {
+			return packit.DetectResult{}, err
+		}
+
 		requirements := []packit.BuildPlanRequirement{
 			{
 				Name: Node,
@@ -41,19 +46,30 @@ func Detect(reloader Reloader) packit.DetectFunc {
 					"launch": true,
 				},
 			},
-			{
+		}
+
+		if shouldLaunchWithTini {
+			requirements = append(requirements, packit.BuildPlanRequirement{
+				Name: Tini,
+				Metadata: map[string]interface{}{
+					"launch": true,
+				},
+			})
+		} else {
+			requirements = append(requirements, packit.BuildPlanRequirement{
 				Name: Npm,
 				Metadata: map[string]interface{}{
 					"launch": true,
 				},
-			},
-			{
-				Name: NodeModules,
-				Metadata: map[string]interface{}{
-					"launch": true,
-				},
-			},
+			})
 		}
+
+		requirements = append(requirements, packit.BuildPlanRequirement{
+			Name: NodeModules,
+			Metadata: map[string]interface{}{
+				"launch": true,
+			},
+		})
 
 		if shouldReload, err := reloader.ShouldEnableLiveReload(); err != nil {
 			return packit.DetectResult{}, err

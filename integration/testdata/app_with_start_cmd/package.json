@@ -19,6 +19,7 @@
     "start": "echo \"start\" && node hello.js",
     "start:dev": "echo \"start:dev\" && node hello.js",
     "start:arg": "echo \"start:arg\" && node",
+    "start:node": "node hello.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "version": "0.0.0"
