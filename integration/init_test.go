@@ -30,6 +30,9 @@ var settings struct {
 		Watchexec struct {
 			Online string
 		}
+		Tini struct {
+			Online string
+		}
 	}
 	Buildpack struct {
 		ID   string
@@ -39,6 +42,7 @@ var settings struct {
 		NodeEngine         string `json:"node-engine"`
 		NPMInstall         string `json:"npm-install"`
 		Watchexec          string `json:"watchexec"`
+		Tini               string `json:"tini"`
 		UbiNodejsExtension string `json:"ubi-nodejs-extension"`
 	}
 
@@ -98,6 +102,10 @@ func TestIntegration(t *testing.T) {
 		Execute(settings.Config.Watchexec)
 	Expect(err).ToNot(HaveOccurred())
 
+	settings.Buildpacks.Tini.Online, err = buildpackStore.Get.
+		Execute(settings.Config.Tini)
+	Expect(err).ToNot(HaveOccurred())
+
 	SetDefaultEventuallyTimeout(10 * time.Second)
 
 	suite := spec.New("Integration", spec.Parallel(), spec.Report(report.Terminal{}))
@@ -105,5 +113,6 @@ func TestIntegration(t *testing.T) {
 	suite("ProjectPath", testProjectPath)
 	suite("ReproducibleBuilds", testReproducibleBuilds)
 	suite("StartCommand", testAppWithStartCmd)
+	suite("Tini", testTini)
 	suite.Run(t)
 }
