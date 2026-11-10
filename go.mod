@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/onsi/gomega v1.44.0
 	github.com/paketo-buildpacks/libnodejs v0.5.0
-	github.com/paketo-buildpacks/libreload-packit v0.0.1
+	github.com/paketo-buildpacks/libreload-packit v0.0.2
 	github.com/paketo-buildpacks/occam v0.31.4
 	github.com/paketo-buildpacks/packit/v2 v2.26.0
 	github.com/sclevine/spec v1.4.0
